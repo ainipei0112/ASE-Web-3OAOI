@@ -23,7 +23,7 @@ const items = [
   {
     href: "/app/airesults",
     icon: DatabaseIcon,
-    title: "AI Result",
+    title: "Chart",
   },
 ];
 
