@@ -4,7 +4,7 @@ import MainLayout from "./components/MainLayout"; // 整個頁框
 
 // 導入頁面
 import NotFound from "./pages/NotFound";
-import Chart from "./pages/AI_ResultList";
+import Chart from "./pages/Chart";
 
 // 儲存路由資訊
 const Routes = [

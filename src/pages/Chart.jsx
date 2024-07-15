@@ -1,7 +1,9 @@
 import { Helmet } from "react-helmet";
 import {
   Box,
+  Container
 } from '@mui/material';
+import ChartContent from "../components/chart/ChartContent";
 
 const Chart = () => {
 
@@ -12,12 +14,15 @@ const Chart = () => {
       </Helmet>
       <Box
         sx={{
-          backgroundColor: "#d7e0e9",
           minHeight: "100%",
-          py: 3,
+          py: 1,
         }}
       >
-        
+        <Container maxWidth={false}>
+          <Box sx={{ pt: 1 }}>
+            <ChartContent />
+          </Box>
+        </Container>
       </Box>
     </>
   );
