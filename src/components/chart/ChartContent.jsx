@@ -1,5 +1,19 @@
 import { useMemo } from 'react';
-import { Box, Button, Card, Checkbox, MenuItem, Select, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { 
+	Box, 
+	Button, 
+	Card, 
+	Checkbox, 
+	MenuItem, 
+	Select, 
+	Table, 
+	TableBody, 
+	TableCell, 
+	TableContainer, 
+	TableHead, 
+	TableRow, 
+	Paper 
+} from '@mui/material';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import EditIcon from '@mui/icons-material/Edit';
 import Highcharts from "highcharts";
@@ -29,6 +43,9 @@ const ChartContent = () => {
 			},
 			credits: {
 				enabled: false, // 去除 Highcharts.com 字樣
+			},
+			accessibility: {
+				enabled: false // 無障礙功能關閉
 			},
 			xAxis: {
 				categories: [
@@ -103,18 +120,20 @@ const ChartContent = () => {
 					</Box>
 					<Box sx={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
 						<EditIcon />
-						<span style={{ marginLeft: 10 , marginRight: '10px' }}>BD圖號: </span>
+						<span style={{ marginLeft: 10, marginRight: '10px' }}>BD圖號: </span>
 						<Select
 							label="Age"
+							value={10}
 						>
 							<MenuItem value={10}>Ten</MenuItem>
 							<MenuItem value={20}>Twenty</MenuItem>
 							<MenuItem value={30}>Thirty</MenuItem>
 						</Select>
-						<EditIcon style={{ marginLeft: 10}} />
-						<span style={{ marginLeft: 10 , marginRight: '10px' }}>機台號: </span>
+						<EditIcon style={{ marginLeft: 10 }} />
+						<span style={{ marginLeft: 10, marginRight: '10px' }}>機台號: </span>
 						<Select
 							label="Age"
+							value={10}
 						>
 							<MenuItem value={10}>Ten</MenuItem>
 							<MenuItem value={20}>Twenty</MenuItem>
