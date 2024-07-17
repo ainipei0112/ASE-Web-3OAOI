@@ -1,6 +1,9 @@
-import { Box, Button , Card, Checkbox, MenuItem, Select, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { useMemo } from 'react';
+import { Box, Button, Card, Checkbox, MenuItem, Select, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import EditIcon from '@mui/icons-material/Edit';
+import Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
 
 const ChartContent = () => {
 
@@ -19,6 +22,70 @@ const ChartContent = () => {
 		{ name: 'OTHER_SCRAP_SHORT', Apr: 23265, May: 17243, Jun: 13349, Jul: 6190, W26: 3556, W27: 2773, W28: 2915, W29: 502, '07/09': 640, '07/10': 542, '07/11': 415, '07/12': 329, '07/13': 173, '07/14': 0 },
 	];
 
+	const options = useMemo(() => {
+		return {
+			title: {
+				text: 'Pass & Overkill rate By QL14 3x3 16L(BMI482/BD:AAH@A29073A004-C)'
+			},
+			credits: {
+				enabled: false, // 去除 Highcharts.com 字樣
+			},
+			xAxis: {
+				categories: [
+				'Apr', 'May', 'Jun', 'Jul', 'W26', 'W27', 'W28', 'W29',
+				'07/09', '07/10', '07/11', '07/12', '07/13', '07/14'
+				]
+			},
+			yAxis: [
+				{
+				title: {
+					text: 'LRR'
+				},
+				opposite: true
+				},
+				{
+				title: {
+					text: 'PPM'
+				},
+				min: 0,
+				max: 2000
+				}
+			],
+			series: [
+				{
+				name: 'LRR',
+				type: 'line',
+				yAxis: 0,
+				data: rows.map(row => row.LRR)
+				},
+				{
+				name: 'OPEN_PPM',
+				type: 'column',
+				yAxis: 1,
+				data: rows.map(row => row.OPEN_PPM)
+				},
+				{
+				name: 'SHORT_PPM',
+				type: 'column',
+				yAxis: 1,
+				data: rows.map(row => row.SHORT_PPM)
+				},
+				{
+				name: 'LEAKAGE_PPM',
+				type: 'column',
+				yAxis: 1,
+				data: rows.map(row => row.LEAKAGE_PPM)
+				},
+				{
+				name: 'FUNCTION_PPM',
+				type: 'column',
+				yAxis: 1,
+				data: rows.map(row => row.FUNCTION_PPM)
+				}
+			]
+		};
+	}, [rows]);
+
 	return (
 		<>
 			<Card sx={{ border: '1px solid lightgreen', minHeight: 800 }}>
@@ -36,7 +103,16 @@ const ChartContent = () => {
 					</Box>
 					<Box sx={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
 						<EditIcon />
-						<span style={{ marginLeft: 10 }}>RUN TYPE: </span>
+						<span style={{ marginLeft: 10 , marginRight: '10px' }}>BD圖號: </span>
+						<Select
+							label="Age"
+						>
+							<MenuItem value={10}>Ten</MenuItem>
+							<MenuItem value={20}>Twenty</MenuItem>
+							<MenuItem value={30}>Thirty</MenuItem>
+						</Select>
+						<EditIcon style={{ marginLeft: 10}} />
+						<span style={{ marginLeft: 10 , marginRight: '10px' }}>機台號: </span>
 						<Select
 							label="Age"
 						>
@@ -48,6 +124,7 @@ const ChartContent = () => {
 					<Button variant="contained" sx={{ marginRight: '10px' }}>Query</Button>
 					<Button variant="contained" sx={{ marginRight: '10px' }}>Export</Button>
 				</Box>
+				<HighchartsReact highcharts={Highcharts} options={options} />
 				<TableContainer component={Paper}>
 					<Table sx={{ minWidth: 650 }} size="small" aria-label="simple table">
 						<TableHead>
