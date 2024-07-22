@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { 
 	Box, 
 	Button, 
@@ -20,6 +20,16 @@ import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 
 const ChartContent = () => {
+	const [selectedBD, setSelectedBD] = useState('A2766102'); // 預設選擇的 BD 圖號
+	const [selectedMachine, setSelectedMachine] = useState('203'); // 預設選擇的 機台號
+
+	const handleBDChange = (event) => {
+		setSelectedBD(event.target.value);
+	};
+
+	const handleMachineChange = (event) => {
+		setSelectedMachine(event.target.value);
+	};
 
 	const rows = [
 		{ name: 'TEST_LOT', May: 136323, Jun: 119331, Jul: 63678, W26: 29810, W27: 26949, W28: 25990, W29: 10739, '07/09': 3778, '07/10': 3623, '07/11': 3348, '07/12': 3514, '07/13': 3674, '07/14': 3551 },
@@ -39,7 +49,7 @@ const ChartContent = () => {
 	const options = useMemo(() => {
 		return {
 			title: {
-				text: 'Pass & Overkill rate By QL14 3x3 16L(BMI482/BD:AAH@A29073A004-C)'
+				text: `Pass & Overkill rate By Machine:${selectedMachine}/BD:AAH@${selectedBD}`
 			},
 			credits: {
 				enabled: false, // 去除 Highcharts.com 字樣
@@ -229,17 +239,17 @@ const ChartContent = () => {
 						<EditIcon />
 						<span style={{ marginLeft: 10, marginRight: '10px' }}>BD圖號: </span>
 						<Select
-							label="Age"
-							value={10}
+							value={'A2766102'}
+							onChange={handleBDChange}
 						>
-							<MenuItem value={10}>AAH@A2766102</MenuItem>
-							<MenuItem value={20}>AAH@A29073A4</MenuItem>
+							<MenuItem value={'A2766102'}>AAH@A2766102</MenuItem>
+							<MenuItem value={'A29073A4'}>AAH@A29073A4</MenuItem>
 						</Select>
 						<EditIcon style={{ marginLeft: 10 }} />
 						<span style={{ marginLeft: 10, marginRight: '10px' }}>機台號: </span>
 						<Select
-							label="Age"
 							value={10}
+							onChange={handleMachineChange}
 						>
 							<MenuItem value={10}>203</MenuItem>
 							<MenuItem value={20}>6I03</MenuItem>
