@@ -17,14 +17,7 @@ const Routes = [
       { path: "404", element: <NotFound /> },
       { path: "*", element: <Navigate to="/404" /> },
     ],
-  },
-  // {
-  //   path: "/app",
-  //   element: <DashboardLayout />, // 設定要載入頁面內容的範圍為 DashboardLayout。
-  //   children: [
-  //     { path: "airesults", element: <Chart /> },
-  //   ],
-  // },
+  }
 ];
 
 export default Routes;

@@ -47,24 +47,6 @@ const reducer = (state, action) => {
 const Actions = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const userLogin = async (userdata) => {
-    try {
-      const data = await fetchData(
-        "http://localhost/php-react/login-user.php",
-        "POST",
-        userdata
-      );
-      if (data.length > 0) {
-        dispatch({ type: "SET_USERS", payload: data });
-      } else {
-        throw new Error("沒有找到任何使用者資料");
-      }
-    } catch (err) {
-      console.error(err.message);
-      throw new Error("使用者登入失敗");
-    }
-  };
-
   const searchProduct = async (productId) => {
     const getCachedProducts = () => {
       if (state.cachedProducts[productId]) {
@@ -119,8 +101,7 @@ const Actions = () => {
   const searchAiresult = async (selectedCustomer, selectedDateRange) => {
     try {
       const data = await fetchData(
-        // "http://10.11.33.122:1234/all-data.php",
-        "http://10.10.66.61:1234/all-data.php",
+        "http://10.11.33.122:1234/all-data.php",
         "POST",
         {
           action: "getAIResults",
@@ -143,10 +124,8 @@ const Actions = () => {
 
   // 回傳所有API抓取到的資料
   return {
-    users: state.users,
     products: state.products,
     airesults: state.airesults,
-    userLogin,
     searchProduct,
     searchAiresult,
   };
