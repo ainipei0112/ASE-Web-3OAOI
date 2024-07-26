@@ -1,18 +1,18 @@
 import { useMemo, useState } from 'react';
-import { 
-	Box, 
-	Button, 
-	Card, 
-	Checkbox, 
-	MenuItem, 
-	Select, 
-	Table, 
-	TableBody, 
-	TableCell, 
-	TableContainer, 
-	TableHead, 
-	TableRow, 
-	Paper 
+import {
+	Box,
+	Button,
+	Card,
+	Checkbox,
+	MenuItem,
+	Select,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableHead,
+	TableRow,
+	Paper
 } from '@mui/material';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import EditIcon from '@mui/icons-material/Edit';
@@ -66,156 +66,156 @@ const ChartContent = () => {
 			},
 			xAxis: {
 				categories: [
-				'May', 'Jun', 'Jul', 'W26', 'W27', 'W28', 'W29',
-				'07/09', '07/10', '07/11', '07/12', '07/13', '07/14'
+					'May', 'Jun', 'Jul', 'W26', 'W27', 'W28', 'W29',
+					'07/09', '07/10', '07/11', '07/12', '07/13', '07/14'
 				],
 				crosshair: true
 			},
 			yAxis: [
 				{
 					title: {
-					  text: 'LRR',
-					  style: {
-						  color: Highcharts.getOptions().colors[1]
-					  }
-				  },  
-				  labels: {
-					  format: '{value}',
-					  style: {
-						  color: Highcharts.getOptions().colors[1]
-					  }
-				  }        
-			  }, {
-				  title: {
-					  text: 'PPM',
-					  style: {
-						  color: Highcharts.getOptions().colors[0]
-					  }
-				  },
-				  labels: {
-					  format: '{value} ',
-					  style: {
-						  color: Highcharts.getOptions().colors[0]
-					  }
-				  },
+						text: 'LRR',
+						style: {
+							color: Highcharts.getOptions().colors[1]
+						}
+					},
+					labels: {
+						format: '{value}',
+						style: {
+							color: Highcharts.getOptions().colors[1]
+						}
+					}
+				}, {
+					title: {
+						text: 'PPM',
+						style: {
+							color: Highcharts.getOptions().colors[0]
+						}
+					},
+					labels: {
+						format: '{value} ',
+						style: {
+							color: Highcharts.getOptions().colors[0]
+						}
+					},
 					stackLabels: {
 						enabled: true
 					},
-				  opposite: true
-			  },
+					opposite: true
+				},
 			],
 			plotOptions: {
-        column: {
-            stacking: 'normal',
-            dataLabels: {
-                enabled: true
-            }
-        }
-    },
+				column: {
+					stacking: 'normal',
+					dataLabels: {
+						enabled: true
+					}
+				}
+			},
 			series: [
-			{
-				name: 'OPEN_PPM',
-				type: 'column',
-				yAxis: 1,
-				data: [
-					rows.find(row => row.name === 'OPEN_PPM').May,
-					rows.find(row => row.name === 'OPEN_PPM').Jun,
-					rows.find(row => row.name === 'OPEN_PPM').Jul,
-					rows.find(row => row.name === 'OPEN_PPM').W26,
-					rows.find(row => row.name === 'OPEN_PPM')['W27'],
-					rows.find(row => row.name === 'OPEN_PPM')['W28'],
-					rows.find(row => row.name === 'OPEN_PPM')['W29'],
-					rows.find(row => row.name === 'OPEN_PPM')['07/09'],
-					rows.find(row => row.name === 'OPEN_PPM')['07/10'],
-					rows.find(row => row.name === 'OPEN_PPM')['07/11'],
-					rows.find(row => row.name === 'OPEN_PPM')['07/12'],
-					rows.find(row => row.name === 'OPEN_PPM')['07/13'],
-					rows.find(row => row.name === 'OPEN_PPM')['07/14']
-				],
-				tooltip: {
-					valueSuffix: ''
-				}
-			},
-			{
-				name: 'SHORT_PPM',
-				type: 'column',
-				yAxis: 1,
-				data: [
-					rows.find(row => row.name === 'SHORT_PPM').May,
-					rows.find(row => row.name === 'SHORT_PPM').Jun,
-					rows.find(row => row.name === 'SHORT_PPM').Jul,
-					rows.find(row => row.name === 'SHORT_PPM').W26,
-					rows.find(row => row.name === 'SHORT_PPM')['W27'],
-					rows.find(row => row.name === 'SHORT_PPM')['W28'],
-					rows.find(row => row.name === 'SHORT_PPM')['W29'],
-					rows.find(row => row.name === 'SHORT_PPM')['07/09'],
-					rows.find(row => row.name === 'SHORT_PPM')['07/10'],
-					rows.find(row => row.name === 'SHORT_PPM')['07/11'],
-					rows.find(row => row.name === 'SHORT_PPM')['07/12'],
-					rows.find(row => row.name === 'SHORT_PPM')['07/13'],
-					rows.find(row => row.name === 'SHORT_PPM')['07/14']
-				],
-				tooltip: {
-					valueSuffix: ''
-				}
-			},
-			{
-				name: 'LEAKAGE_PPM',
-				type: 'column',
-				yAxis: 1,
-				data: [
-					rows.find(row => row.name === 'LEAKAGE_PPM').May,
-					rows.find(row => row.name === 'LEAKAGE_PPM').Jun,
-					rows.find(row => row.name === 'LEAKAGE_PPM').Jul,
-					rows.find(row => row.name === 'LEAKAGE_PPM').W26,
-					rows.find(row => row.name === 'LEAKAGE_PPM')['W27'],
-					rows.find(row => row.name === 'LEAKAGE_PPM')['W28'],
-					rows.find(row => row.name === 'LEAKAGE_PPM')['W29'],
-					rows.find(row => row.name === 'LEAKAGE_PPM')['07/09'],
-					rows.find(row => row.name === 'LEAKAGE_PPM')['07/10'],
-					rows.find(row => row.name === 'LEAKAGE_PPM')['07/11'],
-					rows.find(row => row.name === 'LEAKAGE_PPM')['07/12'],
-					rows.find(row => row.name === 'LEAKAGE_PPM')['07/13'],
-					rows.find(row => row.name === 'LEAKAGE_PPM')['07/14']
-				],
-				tooltip: {
-					valueSuffix: ''
-				}
-			},
-			{
-				name: 'FUNCTION_PPM',
-				type: 'column',
-				yAxis: 1,
-				data: [
-					rows.find(row => row.name === 'FUNCTION_PPM').May,
-					rows.find(row => row.name === 'FUNCTION_PPM').Jun,
-					rows.find(row => row.name === 'FUNCTION_PPM').Jul,
-					rows.find(row => row.name === 'FUNCTION_PPM').W26,
-					rows.find(row => row.name === 'FUNCTION_PPM')['W27'],
-					rows.find(row => row.name === 'FUNCTION_PPM')['W28'],
-					rows.find(row => row.name === 'FUNCTION_PPM')['W29'],
-					rows.find(row => row.name === 'FUNCTION_PPM')['07/09'],
-					rows.find(row => row.name === 'FUNCTION_PPM')['07/10'],
-					rows.find(row => row.name === 'FUNCTION_PPM')['07/11'],
-					rows.find(row => row.name === 'FUNCTION_PPM')['07/12'],
-					rows.find(row => row.name === 'FUNCTION_PPM')['07/13'],
-					rows.find(row => row.name === 'FUNCTION_PPM')['07/14']
-				],
-				tooltip: {
-					valueSuffix: ''
-				}
-			},
-			{
-				name: 'LRR',
-				type: 'spline',
-				yAxis: 0,
-				data: [
-					2.51, 1.93, 1.88, 1.73, 1.76, 1.79, 2.37, 2.01, 1.55, 2.15, 2.68, 2.20, 2.25
-				],
-				tooltip: {
-					valueSuffix: ''
-				}
-			},
+				{
+					name: 'OPEN_PPM',
+					type: 'column',
+					yAxis: 1,
+					data: [
+						rows.find(row => row.name === 'OPEN_PPM').May,
+						rows.find(row => row.name === 'OPEN_PPM').Jun,
+						rows.find(row => row.name === 'OPEN_PPM').Jul,
+						rows.find(row => row.name === 'OPEN_PPM').W26,
+						rows.find(row => row.name === 'OPEN_PPM')['W27'],
+						rows.find(row => row.name === 'OPEN_PPM')['W28'],
+						rows.find(row => row.name === 'OPEN_PPM')['W29'],
+						rows.find(row => row.name === 'OPEN_PPM')['07/09'],
+						rows.find(row => row.name === 'OPEN_PPM')['07/10'],
+						rows.find(row => row.name === 'OPEN_PPM')['07/11'],
+						rows.find(row => row.name === 'OPEN_PPM')['07/12'],
+						rows.find(row => row.name === 'OPEN_PPM')['07/13'],
+						rows.find(row => row.name === 'OPEN_PPM')['07/14']
+					],
+					tooltip: {
+						valueSuffix: ''
+					}
+				},
+				{
+					name: 'SHORT_PPM',
+					type: 'column',
+					yAxis: 1,
+					data: [
+						rows.find(row => row.name === 'SHORT_PPM').May,
+						rows.find(row => row.name === 'SHORT_PPM').Jun,
+						rows.find(row => row.name === 'SHORT_PPM').Jul,
+						rows.find(row => row.name === 'SHORT_PPM').W26,
+						rows.find(row => row.name === 'SHORT_PPM')['W27'],
+						rows.find(row => row.name === 'SHORT_PPM')['W28'],
+						rows.find(row => row.name === 'SHORT_PPM')['W29'],
+						rows.find(row => row.name === 'SHORT_PPM')['07/09'],
+						rows.find(row => row.name === 'SHORT_PPM')['07/10'],
+						rows.find(row => row.name === 'SHORT_PPM')['07/11'],
+						rows.find(row => row.name === 'SHORT_PPM')['07/12'],
+						rows.find(row => row.name === 'SHORT_PPM')['07/13'],
+						rows.find(row => row.name === 'SHORT_PPM')['07/14']
+					],
+					tooltip: {
+						valueSuffix: ''
+					}
+				},
+				{
+					name: 'LEAKAGE_PPM',
+					type: 'column',
+					yAxis: 1,
+					data: [
+						rows.find(row => row.name === 'LEAKAGE_PPM').May,
+						rows.find(row => row.name === 'LEAKAGE_PPM').Jun,
+						rows.find(row => row.name === 'LEAKAGE_PPM').Jul,
+						rows.find(row => row.name === 'LEAKAGE_PPM').W26,
+						rows.find(row => row.name === 'LEAKAGE_PPM')['W27'],
+						rows.find(row => row.name === 'LEAKAGE_PPM')['W28'],
+						rows.find(row => row.name === 'LEAKAGE_PPM')['W29'],
+						rows.find(row => row.name === 'LEAKAGE_PPM')['07/09'],
+						rows.find(row => row.name === 'LEAKAGE_PPM')['07/10'],
+						rows.find(row => row.name === 'LEAKAGE_PPM')['07/11'],
+						rows.find(row => row.name === 'LEAKAGE_PPM')['07/12'],
+						rows.find(row => row.name === 'LEAKAGE_PPM')['07/13'],
+						rows.find(row => row.name === 'LEAKAGE_PPM')['07/14']
+					],
+					tooltip: {
+						valueSuffix: ''
+					}
+				},
+				{
+					name: 'FUNCTION_PPM',
+					type: 'column',
+					yAxis: 1,
+					data: [
+						rows.find(row => row.name === 'FUNCTION_PPM').May,
+						rows.find(row => row.name === 'FUNCTION_PPM').Jun,
+						rows.find(row => row.name === 'FUNCTION_PPM').Jul,
+						rows.find(row => row.name === 'FUNCTION_PPM').W26,
+						rows.find(row => row.name === 'FUNCTION_PPM')['W27'],
+						rows.find(row => row.name === 'FUNCTION_PPM')['W28'],
+						rows.find(row => row.name === 'FUNCTION_PPM')['W29'],
+						rows.find(row => row.name === 'FUNCTION_PPM')['07/09'],
+						rows.find(row => row.name === 'FUNCTION_PPM')['07/10'],
+						rows.find(row => row.name === 'FUNCTION_PPM')['07/11'],
+						rows.find(row => row.name === 'FUNCTION_PPM')['07/12'],
+						rows.find(row => row.name === 'FUNCTION_PPM')['07/13'],
+						rows.find(row => row.name === 'FUNCTION_PPM')['07/14']
+					],
+					tooltip: {
+						valueSuffix: ''
+					}
+				},
+				{
+					name: 'LRR',
+					type: 'spline',
+					yAxis: 0,
+					data: [
+						2.51, 1.93, 1.88, 1.73, 1.76, 1.79, 2.37, 2.01, 1.55, 2.15, 2.68, 2.20, 2.25
+					],
+					tooltip: {
+						valueSuffix: ''
+					}
+				},
 			],
 		};
 	}, [rows]);
@@ -260,7 +260,7 @@ const ChartContent = () => {
 					<Button variant="contained" sx={{ marginRight: '10px' }}>Query</Button>
 					<Button variant="contained" sx={{ marginRight: '10px' }}>Export</Button>
 				</Box>
-				<HighchartsReact highcharts={Highcharts} options={options} />
+				{/* <HighchartsReact highcharts={Highcharts} options={options} />
 				<TableContainer component={Paper}>
 					<Table sx={{ minWidth: 650 }} size="small" aria-label="simple table">
 						<TableHead>
@@ -307,7 +307,7 @@ const ChartContent = () => {
 							))}
 						</TableBody>
 					</Table>
-				</TableContainer>
+				</TableContainer> */}
 			</Card>
 		</>
 	);
