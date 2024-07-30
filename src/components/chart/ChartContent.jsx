@@ -37,13 +37,13 @@ const ChartContent = () => {
     setSelectedMachine(event.target.value);
   };
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     var data = await searchAiresult();
-  //   };
+  useEffect(() => {
+    const fetchData = async () => {
+      var data = await searchAiresult();
+    };
 
-  //   fetchData();
-  // }, [searchAiresult]);
+    fetchData();
+  }, [searchAiresult]);
 
   // 客戶列表
   const customerOptions = useMemo(
