@@ -32,13 +32,13 @@ const reducer = (state, action) => {
 const Actions = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const searchAiresult = async (selectedCustomer, selectedDateRange) => {
+  const searchAiresult = async () => {
     try {
       const data = await fetchData(
         "http://10.11.33.122:1234/3o-data.php",
         "POST",
         {
-          action: "getAIResults",
+          action: "get3oaoidata",
         }
       );
       if (data.length > 0) {

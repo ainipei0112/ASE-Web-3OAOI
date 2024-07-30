@@ -5,6 +5,7 @@ import {
   Card,
   Checkbox,
   MenuItem,
+  Radio,
   Select,
   Table,
   TableBody,
@@ -36,13 +37,13 @@ const ChartContent = () => {
     setSelectedMachine(event.target.value);
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      var data = await searchAiresult();
-    };
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     var data = await searchAiresult();
+  //   };
 
-    fetchData();
-  }, [searchAiresult]);
+  //   fetchData();
+  // }, [searchAiresult]);
 
   // 客戶列表
   const customerOptions = useMemo(
@@ -255,9 +256,14 @@ const ChartContent = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
             <EditIcon />
             <span style={{ marginLeft: 10 }}>Period: </span>
-            <Checkbox defaultChecked /> Daily
-            <Checkbox defaultChecked /> Weekly
-            <Checkbox defaultChecked /> Monthly
+            <Checkbox defaultChecked sx={{ color: 'gray' }} /> Daily
+            <Checkbox sx={{ color: 'gray' }} /> Weekly
+            <Checkbox sx={{ color: 'gray' }} /> Monthly
+            <span style={{ marginLeft: 30 }}> </span>
+            <EditIcon />
+            <span style={{ marginLeft: 10 }}>圖表類型: </span>
+            <Radio defaultChecked sx={{ color: 'gray' }} /> 機台
+            <Radio sx={{ color: 'gray' }} /> BD圖
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
             <EditIcon />
@@ -269,15 +275,15 @@ const ChartContent = () => {
               <MenuItem value={'A2766102'}>AAH@A2766102</MenuItem>
               <MenuItem value={'A29073A4'}>AAH@A29073A4</MenuItem>
             </Select>
-            <Autocomplete
+            {/* <Autocomplete
               size="small"
               sx={{ width: 300 }}
               options={customerOptions}
               getOptionLabel={(option) => option.title}
               isOptionEqualToValue={(option, value) => option.title === value}
               renderInput={(params) => <TextField {...params} placeholder={"BD圖號"} />}
-            />
-            <EditIcon style={{ marginLeft: 10 }} />
+            /> */}
+            <EditIcon style={{ marginLeft: 100 }} />
             <span style={{ marginLeft: 10, marginRight: '10px' }}>機台號: </span>
             <Select
               value={10}
@@ -289,57 +295,59 @@ const ChartContent = () => {
               <MenuItem value={40}>WBAOI</MenuItem>
             </Select>
           </Box>
-          <Button variant="contained" sx={{ marginRight: '10px' }}>Query</Button>
-          <Button variant="contained" sx={{ marginRight: '10px' }}>Export</Button>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '10px' }}>
+            <Button variant="contained" sx={{ marginRight: '10px' }}>Query</Button>
+            <Button variant="contained">Export</Button>
+          </Box>
         </Box>
         {/* <HighchartsReact highcharts={Highcharts} options={options} />
-				<TableContainer component={Paper}>
-					<Table sx={{ minWidth: 650 }} size="small" aria-label="simple table">
-						<TableHead>
-							<TableRow>
-								<TableCell>DATE</TableCell>
-								<TableCell>May</TableCell>
-								<TableCell>Jun</TableCell>
-								<TableCell>Jul</TableCell>
-								<TableCell>W26</TableCell>
-								<TableCell>W27</TableCell>
-								<TableCell>W28</TableCell>
-								<TableCell>W29</TableCell>
-								<TableCell>07/09</TableCell>
-								<TableCell>07/10</TableCell>
-								<TableCell>07/11</TableCell>
-								<TableCell>07/12</TableCell>
-								<TableCell>07/13</TableCell>
-								<TableCell>07/14</TableCell>
-							</TableRow>
-						</TableHead>
-						<TableBody>
-							{rows.map((row) => (
-								<TableRow
-									key={row.name}
-									sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-								>
-									<TableCell component="th" scope="row">
-										{row.name}
-									</TableCell>
-									<TableCell align="right">{row.May}</TableCell>
-									<TableCell align="right">{row.Jun}</TableCell>
-									<TableCell align="right">{row.Jul}</TableCell>
-									<TableCell align="right">{row.W26}</TableCell>
-									<TableCell align="right">{row.W27}</TableCell>
-									<TableCell align="right">{row.W28}</TableCell>
-									<TableCell align="right">{row.W29}</TableCell>
-									<TableCell align="right">{row['07/09']}</TableCell>
-									<TableCell align="right">{row['07/10']}</TableCell>
-									<TableCell align="right">{row['07/11']}</TableCell>
-									<TableCell align="right">{row['07/12']}</TableCell>
-									<TableCell align="right">{row['07/13']}</TableCell>
-									<TableCell align="right">{row['07/14']}</TableCell>
-								</TableRow>
-							))}
-						</TableBody>
-					</Table>
-				</TableContainer> */}
+        <TableContainer component={Paper}>
+          <Table sx={{ minWidth: 650 }} size="small" aria-label="simple table">
+            <TableHead>
+              <TableRow>
+                <TableCell>DATE</TableCell>
+                <TableCell>May</TableCell>
+                <TableCell>Jun</TableCell>
+                <TableCell>Jul</TableCell>
+                <TableCell>W26</TableCell>
+                <TableCell>W27</TableCell>
+                <TableCell>W28</TableCell>
+                <TableCell>W29</TableCell>
+                <TableCell>07/09</TableCell>
+                <TableCell>07/10</TableCell>
+                <TableCell>07/11</TableCell>
+                <TableCell>07/12</TableCell>
+                <TableCell>07/13</TableCell>
+                <TableCell>07/14</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {rows.map((row) => (
+                <TableRow
+                  key={row.name}
+                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                >
+                  <TableCell component="th" scope="row">
+                    {row.name}
+                  </TableCell>
+                  <TableCell align="right">{row.May}</TableCell>
+                  <TableCell align="right">{row.Jun}</TableCell>
+                  <TableCell align="right">{row.Jul}</TableCell>
+                  <TableCell align="right">{row.W26}</TableCell>
+                  <TableCell align="right">{row.W27}</TableCell>
+                  <TableCell align="right">{row.W28}</TableCell>
+                  <TableCell align="right">{row.W29}</TableCell>
+                  <TableCell align="right">{row['07/09']}</TableCell>
+                  <TableCell align="right">{row['07/10']}</TableCell>
+                  <TableCell align="right">{row['07/11']}</TableCell>
+                  <TableCell align="right">{row['07/12']}</TableCell>
+                  <TableCell align="right">{row['07/13']}</TableCell>
+                  <TableCell align="right">{row['07/14']}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer> */}
       </Card>
     </>
   );
