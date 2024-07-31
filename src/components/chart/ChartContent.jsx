@@ -4,8 +4,10 @@ import {
   Button,
   Card,
   Checkbox,
+  FormControlLabel,
   MenuItem,
   Radio,
+  RadioGroup,
   Select,
   Table,
   TableBody,
@@ -16,16 +18,17 @@ import {
   TextField,
   Paper
 } from '@mui/material';
+import { grey } from '@mui/material/colors';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import EditIcon from '@mui/icons-material/Edit';
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import { AppContext } from "/src/Context.jsx";
 
 const ChartContent = () => {
-  const { searchAiresult, airesults } = useContext(AppContext);
+  const { airesults } = useContext(AppContext);
   const [selectedBD, setSelectedBD] = useState('A2766102'); // 預設選擇的 BD 圖號
   const [selectedMachine, setSelectedMachine] = useState('203'); // 預設選擇的 機台號
 
@@ -37,16 +40,8 @@ const ChartContent = () => {
     setSelectedMachine(event.target.value);
   };
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     var data = await searchAiresult();
-  //   };
-
-  //   fetchData();
-  // }, [searchAiresult]);
-
-  // 客戶列表
-  const customerOptions = useMemo(
+  // BD選單
+  const bdOptions = useMemo(
     () =>
       [
         ...new Set(airesults.map(({ Drawing_No }) => Drawing_No)),
@@ -56,6 +51,18 @@ const ChartContent = () => {
     [airesults]
   );
 
+  // 機台選單
+  const machineOptions = useMemo(
+    () =>
+      [
+        ...new Set(airesults.map(({ Ao_Info_Machine_Id }) => Ao_Info_Machine_Id)),
+      ]
+        .sort()
+        .map((Ao_Info_Machine_Id) => ({ title: Ao_Info_Machine_Id })),
+    [airesults]
+  );
+
+  // 表格資料
   const rows = [
     { name: 'TEST_LOT', May: 136323, Jun: 119331, Jul: 63678, W26: 29810, W27: 26949, W28: 25990, W29: 10739, '07/09': 3778, '07/10': 3623, '07/11': 3348, '07/12': 3514, '07/13': 3674, '07/14': 3551 },
     { name: 'FAIL_LOT', May: 3427, Jun: 2302, Jul: 1194, W26: 515, W27: 475, W28: 464, W29: 255, '07/09': 76, '07/10': 56, '07/11': 72, '07/12': 94, '07/13': 81, '07/14': 80 },
@@ -71,6 +78,7 @@ const ChartContent = () => {
     { name: 'OTHER_SCRAP_SHORT', May: 17243, Jun: 13349, Jul: 6190, W26: 3556, W27: 2773, W28: 2915, W29: 502, '07/09': 640, '07/10': 542, '07/11': 415, '07/12': 329, '07/13': 173, '07/14': 0 },
   ];
 
+  // 圖表資料
   const options = useMemo(() => {
     return {
       title: {
@@ -243,57 +251,54 @@ const ChartContent = () => {
         },
       ],
     };
-  }, [rows]);
+  }, [airesults, rows]);
 
   return (
     <>
       <Card sx={{ border: '1px solid lightgreen', minHeight: 800 }}>
         <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'left', padding: '0 10px' }}>
           <BarChartIcon />
-          <span style={{ marginLeft: 10 }}>Chart Report</span>
+          <span style={{ padding: 10 }}>Chart Report</span>
         </Box>
         <Box sx={{ padding: '10px' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
             <EditIcon />
-            <span style={{ marginLeft: 10 }}>Period: </span>
+            <span style={{ padding: 10 }}>Period： </span>
             <Checkbox defaultChecked sx={{ color: 'gray' }} /> Daily
             <Checkbox sx={{ color: 'gray' }} /> Weekly
             <Checkbox sx={{ color: 'gray' }} /> Monthly
-            <span style={{ marginLeft: 30 }}> </span>
+            <span style={{ padding: 30 }}> </span>
             <EditIcon />
-            <span style={{ marginLeft: 10 }}>圖表類型: </span>
-            <Radio defaultChecked sx={{ color: 'gray' }} /> 機台
-            <Radio sx={{ color: 'gray' }} /> BD圖
+            <span style={{ padding: 10 }}>圖表類型： </span>
+            <RadioGroup
+              row
+              defaultValue="機台"
+            >
+              <FormControlLabel defaultChecked value="機台" control={<Radio sx={{ color: grey[600] }} />} label="機台" />
+              <FormControlLabel value="BD圖" control={<Radio sx={{ color: grey[600] }} />} label="BD圖" />
+            </RadioGroup>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
             <EditIcon />
-            <span style={{ marginLeft: 10, marginRight: '10px' }}>BD圖號: </span>
-            <Select
-              value={'A2766102'}
-              onChange={handleBDChange}
-            >
-              <MenuItem value={'A2766102'}>AAH@A2766102</MenuItem>
-              <MenuItem value={'A29073A4'}>AAH@A29073A4</MenuItem>
-            </Select>
+            <span style={{ padding: 10 }}>BD圖號： </span>
             <Autocomplete
               size="small"
-              sx={{ width: 300 }}
-              options={customerOptions}
+              sx={{ width: 210 }}
+              options={bdOptions}
               getOptionLabel={(option) => option.title}
-              isOptionEqualToValue={(option, value) => option.title === value}
+              isOptionEqualToValue={(option, value) => option.title === value.title}
               renderInput={(params) => <TextField {...params} placeholder={"BD圖號"} />}
             />
             <EditIcon style={{ marginLeft: 100 }} />
-            <span style={{ marginLeft: 10, marginRight: '10px' }}>機台號: </span>
-            <Select
-              value={'203'}
-              onChange={handleMachineChange}
-            >
-              <MenuItem value={'203'}>203</MenuItem>
-              <MenuItem value={'6I03'}>6I03</MenuItem>
-              <MenuItem value={'6I05'}>6I05</MenuItem>
-              <MenuItem value={'WBAOI'}>WBAOI</MenuItem>
-            </Select>
+            <span style={{ padding: 10 }}>機台號： </span>
+            <Autocomplete
+              size="small"
+              sx={{ width: 210 }}
+              options={machineOptions}
+              getOptionLabel={(option) => option.title}
+              isOptionEqualToValue={(option, value) => option.title === value.title}
+              renderInput={(params) => <TextField {...params} placeholder={"機台號"} />}
+            />
           </Box>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '10px' }}>
             <Button variant="contained" sx={{ marginRight: '10px' }}>Query</Button>

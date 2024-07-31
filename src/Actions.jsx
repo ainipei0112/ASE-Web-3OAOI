@@ -12,7 +12,8 @@ const Actions = () => {
       const data = await res.json();
       if (data.success) return data.products;
       throw new Error(data.msg);
-    }
+    },
+    { revalidateOnFocus: false, revalidateOnReconnect: false }
   );
 
   if (error) {
