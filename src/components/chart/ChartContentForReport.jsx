@@ -1,5 +1,4 @@
 import {
-  Autocomplete,
   Box,
   Button,
   Card,
@@ -21,11 +20,9 @@ import EditIcon from '@mui/icons-material/Edit';
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 
-import { useContext, useEffect, useMemo, useState } from 'react';
-import { AppContext } from "/src/Context.jsx";
+import { useMemo, useState } from 'react';
 
-const ChartContent = () => {
-  const { searchAiresult, airesults } = useContext(AppContext);
+const ChartContentForReport = () => {
   const [selectedBD, setSelectedBD] = useState('A2766102'); // 預設選擇的 BD 圖號
   const [selectedMachine, setSelectedMachine] = useState('203'); // 預設選擇的 機台號
 
@@ -36,25 +33,6 @@ const ChartContent = () => {
   const handleMachineChange = (event) => {
     setSelectedMachine(event.target.value);
   };
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     var data = await searchAiresult();
-  //   };
-
-  //   fetchData();
-  // }, [searchAiresult]);
-
-  // 客戶列表
-  const customerOptions = useMemo(
-    () =>
-      [
-        ...new Set(airesults.map(({ Drawing_No }) => Drawing_No)),
-      ]
-        .sort()
-        .map((Drawing_No) => ({ title: Drawing_No })),
-    [airesults]
-  );
 
   const rows = [
     { name: 'TEST_LOT', May: 136323, Jun: 119331, Jul: 63678, W26: 29810, W27: 26949, W28: 25990, W29: 10739, '07/09': 3778, '07/10': 3623, '07/11': 3348, '07/12': 3514, '07/13': 3674, '07/14': 3551 },
@@ -275,14 +253,6 @@ const ChartContent = () => {
               <MenuItem value={'A2766102'}>AAH@A2766102</MenuItem>
               <MenuItem value={'A29073A4'}>AAH@A29073A4</MenuItem>
             </Select>
-            <Autocomplete
-              size="small"
-              sx={{ width: 300 }}
-              options={customerOptions}
-              getOptionLabel={(option) => option.title}
-              isOptionEqualToValue={(option, value) => option.title === value}
-              renderInput={(params) => <TextField {...params} placeholder={"BD圖號"} />}
-            />
             <EditIcon style={{ marginLeft: 100 }} />
             <span style={{ marginLeft: 10, marginRight: '10px' }}>機台號: </span>
             <Select
@@ -300,7 +270,7 @@ const ChartContent = () => {
             <Button variant="contained">Export</Button>
           </Box>
         </Box>
-        <HighchartsReact highcharts={Highcharts} options={options} />
+        {/* <HighchartsReact highcharts={Highcharts} options={options} />
         <TableContainer component={Paper}>
           <Table sx={{ minWidth: 650 }} size="small" aria-label="simple table">
             <TableHead>
@@ -347,10 +317,10 @@ const ChartContent = () => {
               ))}
             </TableBody>
           </Table>
-        </TableContainer>
+        </TableContainer> */}
       </Card>
     </>
   );
 };
 
-export default ChartContent;
+export default ChartContentForReport;
