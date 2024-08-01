@@ -29,15 +29,16 @@ import { AppContext } from "/src/Context.jsx";
 
 const ChartContent = () => {
   const { airesults } = useContext(AppContext);
-  const [selectedBD, setSelectedBD] = useState('A2766102'); // 預設選擇的 BD 圖號
+  const [selectedBD, setSelectedBD] = useState('AAH@A2766102'); // 預設選擇的 BD 圖號
   const [selectedMachine, setSelectedMachine] = useState('203'); // 預設選擇的 機台號
+  const [title, setTitle] = useState(`Pass & Overkill rate By Machine： ${selectedMachine}`);
 
   const handleBDChange = (event) => {
-    setSelectedBD(event.target.value);
+    setSelectedBD(event.target.innerText);
   };
 
   const handleMachineChange = (event) => {
-    setSelectedMachine(event.target.value);
+    setSelectedMachine(event.target.innerText);
   };
 
   // BD選單
@@ -82,7 +83,7 @@ const ChartContent = () => {
   const options = useMemo(() => {
     return {
       title: {
-        text: `Pass & Overkill rate By Machine:${selectedMachine}/BD:AAH@${selectedBD}`
+        text: title
       },
       credits: {
         enabled: false, // 去除 Highcharts.com 字樣
@@ -273,6 +274,13 @@ const ChartContent = () => {
             <RadioGroup
               row
               defaultValue="機台"
+              onChange={(event) => {
+                if (event.target.value === '機台') {
+                  setTitle(`Pass & Overkill rate By Machine： ${selectedMachine}`);
+                } else {
+                  setTitle(`Pass & Overkill rate By BD： ${selectedBD}`);
+                }
+              }}
             >
               <FormControlLabel defaultChecked value="機台" control={<Radio sx={{ color: grey[600] }} />} label="機台" />
               <FormControlLabel value="BD圖" control={<Radio sx={{ color: grey[600] }} />} label="BD圖" />
@@ -288,6 +296,7 @@ const ChartContent = () => {
               getOptionLabel={(option) => option.title}
               isOptionEqualToValue={(option, value) => option.title === value.title}
               renderInput={(params) => <TextField {...params} placeholder={"BD圖號"} />}
+              onChange={handleBDChange}
             />
             <EditIcon style={{ marginLeft: 100 }} />
             <span style={{ padding: 10 }}>機台號： </span>
@@ -298,6 +307,7 @@ const ChartContent = () => {
               getOptionLabel={(option) => option.title}
               isOptionEqualToValue={(option, value) => option.title === value.title}
               renderInput={(params) => <TextField {...params} placeholder={"機台號"} />}
+              onChange={handleMachineChange}
             />
           </Box>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '10px' }}>
@@ -306,7 +316,7 @@ const ChartContent = () => {
           </Box>
         </Box>
         <HighchartsReact highcharts={Highcharts} options={options} />
-        <TableContainer component={Paper}>
+        {/* <TableContainer component={Paper}>
           <Table sx={{ minWidth: 650 }} size="small" aria-label="simple table">
             <TableHead>
               <TableRow>
@@ -352,7 +362,7 @@ const ChartContent = () => {
               ))}
             </TableBody>
           </Table>
-        </TableContainer>
+        </TableContainer> */}
       </Card>
     </>
   );
