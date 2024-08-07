@@ -21,6 +21,7 @@ import {
 import { grey } from '@mui/material/colors'
 import BarChartIcon from '@mui/icons-material/BarChart'
 import EditIcon from '@mui/icons-material/Edit'
+
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 
@@ -31,7 +32,13 @@ const ChartContent = () => {
     const { airesults } = useContext(AppContext)
     const [selectedBD, setSelectedBD] = useState('AAH@A2766102') // 預設選擇的 BD 圖號
     const [selectedMachine, setSelectedMachine] = useState('203') // 預設選擇的 機台號
+    const [showChart, setShowChart] = useState(false); // 控制HighchartsReact元件的顯示狀態
     const [title, setTitle] = useState(`Pass & Overkill rate By Machine： ${selectedMachine}`)
+
+    const handleQueryClick = () => {
+        // 在按下Query按鈕時設定showChart為true，觸發HighchartsReact元件的顯示
+        setShowChart(true);
+    }
 
     const handleBDChange = (event) => {
         setSelectedBD(event.target.innerText)
@@ -94,7 +101,7 @@ const ChartContent = () => {
             '07/14': 80,
         },
         {
-            name: 'LRR',
+            name: 'OVER_KILL',
             May: 2.51,
             Jun: 1.93,
             Jul: 1.88,
@@ -174,7 +181,7 @@ const ChartContent = () => {
             '07/14': 551,
         },
         {
-            name: 'SHORT_PPM',
+            name: 'PASS_PPM',
             May: 805,
             Jun: 749,
             Jul: 686,
@@ -295,7 +302,7 @@ const ChartContent = () => {
             yAxis: [
                 {
                     title: {
-                        text: 'LRR',
+                        text: 'OVER_KILL',
                         style: {
                             color: Highcharts.getOptions().colors[1],
                         },
@@ -359,23 +366,23 @@ const ChartContent = () => {
                     },
                 },
                 {
-                    name: 'SHORT_PPM',
+                    name: 'PASS_PPM',
                     type: 'column',
                     yAxis: 1,
                     data: [
-                        rows.find((row) => row.name === 'SHORT_PPM').May,
-                        rows.find((row) => row.name === 'SHORT_PPM').Jun,
-                        rows.find((row) => row.name === 'SHORT_PPM').Jul,
-                        rows.find((row) => row.name === 'SHORT_PPM').W26,
-                        rows.find((row) => row.name === 'SHORT_PPM')['W27'],
-                        rows.find((row) => row.name === 'SHORT_PPM')['W28'],
-                        rows.find((row) => row.name === 'SHORT_PPM')['W29'],
-                        rows.find((row) => row.name === 'SHORT_PPM')['07/09'],
-                        rows.find((row) => row.name === 'SHORT_PPM')['07/10'],
-                        rows.find((row) => row.name === 'SHORT_PPM')['07/11'],
-                        rows.find((row) => row.name === 'SHORT_PPM')['07/12'],
-                        rows.find((row) => row.name === 'SHORT_PPM')['07/13'],
-                        rows.find((row) => row.name === 'SHORT_PPM')['07/14'],
+                        rows.find((row) => row.name === 'PASS_PPM').May,
+                        rows.find((row) => row.name === 'PASS_PPM').Jun,
+                        rows.find((row) => row.name === 'PASS_PPM').Jul,
+                        rows.find((row) => row.name === 'PASS_PPM').W26,
+                        rows.find((row) => row.name === 'PASS_PPM')['W27'],
+                        rows.find((row) => row.name === 'PASS_PPM')['W28'],
+                        rows.find((row) => row.name === 'PASS_PPM')['W29'],
+                        rows.find((row) => row.name === 'PASS_PPM')['07/09'],
+                        rows.find((row) => row.name === 'PASS_PPM')['07/10'],
+                        rows.find((row) => row.name === 'PASS_PPM')['07/11'],
+                        rows.find((row) => row.name === 'PASS_PPM')['07/12'],
+                        rows.find((row) => row.name === 'PASS_PPM')['07/13'],
+                        rows.find((row) => row.name === 'PASS_PPM')['07/14'],
                     ],
                     tooltip: {
                         valueSuffix: '',
@@ -428,7 +435,7 @@ const ChartContent = () => {
                     },
                 },
                 {
-                    name: 'LRR',
+                    name: 'OVER_KILL',
                     type: 'spline',
                     yAxis: 0,
                     data: [2.51, 1.93, 1.88, 1.73, 1.76, 1.79, 2.37, 2.01, 1.55, 2.15, 2.68, 2.2, 2.25],
@@ -478,13 +485,13 @@ const ChartContent = () => {
                                 }
                             }}
                         >
+                            <FormControlLabel value='BD圖' control={<Radio sx={{ color: grey[600] }} />} label='BD圖' />
                             <FormControlLabel
                                 defaultChecked
                                 value='機台'
                                 control={<Radio sx={{ color: grey[600] }} />}
                                 label='機台'
                             />
-                            <FormControlLabel value='BD圖' control={<Radio sx={{ color: grey[600] }} />} label='BD圖' />
                         </RadioGroup>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
@@ -492,14 +499,14 @@ const ChartContent = () => {
                         <span style={{ padding: 10 }}>BD圖號： </span>
                         <Autocomplete
                             size='small'
-                            sx={{ width: 210 }}
+                            sx={{ width: 230 }}
                             options={bdOptions}
                             getOptionLabel={(option) => option.title}
                             isOptionEqualToValue={(option, value) => option.title === value.title}
                             renderInput={(params) => <TextField {...params} placeholder={'BD圖號'} />}
                             onChange={handleBDChange}
                         />
-                        <EditIcon style={{ marginLeft: 100 }} />
+                        <EditIcon style={{ marginLeft: 80 }} />
                         <span style={{ padding: 10 }}>機台號： </span>
                         <Autocomplete
                             size='small'
@@ -512,13 +519,13 @@ const ChartContent = () => {
                         />
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '10px' }}>
-                        <Button variant='contained' sx={{ marginRight: '10px' }}>
+                        <Button variant='contained' sx={{ marginRight: '10px' }} onClick={handleQueryClick}>
                             Query
                         </Button>
                         <Button variant='contained'>Export</Button>
                     </Box>
                 </Box>
-                <HighchartsReact highcharts={Highcharts} options={options} />
+                {showChart && <HighchartsReact highcharts={Highcharts} options={options} />}
                 {/* <TableContainer component={Paper}>
                     <Table sx={{ minWidth: 650 }} size="small" aria-label="simple table">
                         <TableHead>
