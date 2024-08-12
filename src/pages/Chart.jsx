@@ -1,7 +1,6 @@
 import { Helmet } from 'react-helmet'
 import { Box, Container } from '@mui/material'
-import ChartContent from '../components/chart/ChartContent' //正式
-import ChartContentForReport from '../components/chart/ChartContentForReport' //報告用
+import ChartContent from '../components/chart/ChartContent'
 
 const Chart = () => {
     return (
@@ -18,7 +17,6 @@ const Chart = () => {
                 <Container maxWidth={false}>
                     <Box sx={{ pt: 1 }}>
                         <ChartContent />
-                        {/* <ChartContentForReport /> */}
                     </Box>
                 </Container>
             </Box>
