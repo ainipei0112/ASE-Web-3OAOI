@@ -1,6 +1,7 @@
 import { Helmet } from 'react-helmet'
 import { Box, Container } from '@mui/material'
 import ChartContent from '../components/chart/ChartContent'
+import ChartContentbackup from '../components/chart/ChartContent-backup'
 
 const Chart = () => {
     return (
@@ -17,6 +18,7 @@ const Chart = () => {
                 <Container maxWidth={false}>
                     <Box sx={{ pt: 1 }}>
                         <ChartContent />
+                        {/* <ChartContentbackup /> */}
                     </Box>
                 </Container>
             </Box>
