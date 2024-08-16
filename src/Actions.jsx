@@ -2,7 +2,7 @@ import useSWR from 'swr'
 
 const Actions = () => {
     const {
-        data: airesults,
+        data: aoiData,
         error,
         revalidate,
     } = useSWR(
@@ -25,14 +25,14 @@ const Actions = () => {
         return <div>商品搜尋失敗</div>
     }
 
-    const searchAiresult = () => {
+    const searchThirdAoiData = () => {
         revalidate()
-        return airesults
+        return aoiData
     }
 
     return {
-        airesults: airesults || [],
-        searchAiresult,
+        aoiData: aoiData || [],
+        searchThirdAoiData,
     }
 }
 

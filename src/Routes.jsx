@@ -12,8 +12,8 @@ const Routes = [
         path: '/',
         element: <MainLayout />,
         children: [
-            { path: 'airesults', element: <Chart /> },
-            { path: '/', element: <Navigate to='/airesults' /> },
+            { path: 'aoiData', element: <Chart /> },
+            { path: '/', element: <Navigate to='/aoiData' /> },
             { path: '404', element: <NotFound /> },
             { path: '*', element: <Navigate to='/404' /> },
         ],

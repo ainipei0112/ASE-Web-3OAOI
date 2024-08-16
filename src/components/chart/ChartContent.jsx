@@ -79,7 +79,7 @@ const reducer = (state, action) => {
 }
 
 const ChartContent = () => {
-    const { airesults } = useContext(AppContext)
+    const { aoiData, searchAiresult } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
     const { updatedTableData, period } = state
     const [chartType, setChartType] = useState('BD圖')
@@ -94,17 +94,22 @@ const ChartContent = () => {
         }
     }
 
-    // 提交查詢條件
-    const searchSubmit = async () => {
-        const threeMonthsData = filterDataByMonthRange(airesults, 3)
-        const fiveWeeksData = filterDataByWeekRange(airesults, 5)
-        const sevenDaysData = filterDataByDateRange(airesults, 7)
+    // 處理並整合各週期資料
+    const processData = () => {
+        const threeMonthsData = filterDataByMonthRange(aoiData, 3) //三月
+        const fiveWeeksData = filterDataByWeekRange(aoiData, 5) //五週
+        const sevenDaysData = filterDataByDateRange(aoiData, 7) //七日
 
+        // 計算平均並合併資料
         const threeMonthsAverage = calculateAverages(threeMonthsData, 'monthly')
         const fiveWeeksAverage = calculateAverages(fiveWeeksData, 'weekly')
         const sevenDaysAverage = calculateAverages(sevenDaysData, 'daily')
-        const combinedData = threeMonthsAverage.concat(fiveWeeksAverage, sevenDaysAverage);
+        return threeMonthsAverage.concat(fiveWeeksAverage, sevenDaysAverage);
+    }
 
+    // 提交查詢條件
+    const searchSubmit = async () => {
+        const combinedData = processData();
         dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateTableData(combinedData) })
         setShowChart(true)
         setShowTable(true)
@@ -115,19 +120,19 @@ const ChartContent = () => {
     // BD選單
     const bdOptions = useMemo(
         () =>
-            [...new Set(airesults.map(({ Drawing_No }) => Drawing_No))]
+            [...new Set(aoiData.map(({ Drawing_No }) => Drawing_No))]
                 .sort()
                 .map((Drawing_No) => ({ title: Drawing_No })),
-        [airesults],
+        [aoiData],
     )
 
     // 機台選單
     const machineOptions = useMemo(
         () =>
-            [...new Set(airesults.map(({ Machine_Id }) => Machine_Id))]
+            [...new Set(aoiData.map(({ Machine_Id }) => Machine_Id))]
                 .sort()
                 .map((Machine_Id) => ({ title: Machine_Id })),
-        [airesults],
+        [aoiData],
     )
 
     // 更新表格資料

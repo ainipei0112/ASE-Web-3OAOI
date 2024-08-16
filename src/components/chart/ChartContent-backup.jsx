@@ -29,7 +29,7 @@ import { useContext, useMemo, useState } from 'react'
 import { AppContext } from '/src/Context.jsx'
 
 const ChartContent = () => {
-    const { airesults } = useContext(AppContext)
+    const { aoiData } = useContext(AppContext)
     const [selectedBD, setSelectedBD] = useState('AAH@A2766102') // 預設選擇的 BD 圖號
     const [selectedMachine, setSelectedMachine] = useState('203') // 預設選擇的 機台號
     const [showChart, setShowChart] = useState(false); // 控制HighchartsReact元件的顯示狀態
@@ -51,19 +51,19 @@ const ChartContent = () => {
     // BD選單
     const bdOptions = useMemo(
         () =>
-            [...new Set(airesults.map(({ Drawing_No }) => Drawing_No))]
+            [...new Set(aoiData.map(({ Drawing_No }) => Drawing_No))]
                 .sort()
                 .map((Drawing_No) => ({ title: Drawing_No })),
-        [airesults],
+        [aoiData],
     )
 
     // 機台選單
     const machineOptions = useMemo(
         () =>
-            [...new Set(airesults.map(({ Machine_Id }) => Machine_Id))]
+            [...new Set(aoiData.map(({ Machine_Id }) => Machine_Id))]
                 .sort()
                 .map((Machine_Id) => ({ title: Machine_Id })),
-        [airesults],
+        [aoiData],
     )
 
     // 表格資料
@@ -445,7 +445,7 @@ const ChartContent = () => {
                 },
             ],
         }
-    }, [airesults, rows])
+    }, [aoiData, rows])
 
     return (
         <>
