@@ -5,7 +5,6 @@ import {
     Card,
     Checkbox,
     FormControlLabel,
-    MenuItem,
     Radio,
     RadioGroup,
     Table,
@@ -15,7 +14,6 @@ import {
     TableHead,
     TableRow,
     TextField,
-    Paper,
 } from '@mui/material'
 import { grey } from '@mui/material/colors'
 import BarChartIcon from '@mui/icons-material/BarChart'
@@ -23,22 +21,35 @@ import EditIcon from '@mui/icons-material/Edit'
 
 import { styled } from '@mui/system'
 
-import { useContext, useMemo, useReducer } from 'react'
+import { useContext, useMemo, useReducer, useState } from 'react'
 import { AppContext } from '/src/Context.jsx'
 import { calculateAverages, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '/src/Function'
 
 // 定義樣式
-const FirstColumnCell = styled(TableCell)`
-    font-size: 16px;
+const TableHeaderCell = styled(TableCell)`
+    font-size: 12px;
     font-weight: bold;
     text-align: center;
     border: 1px solid;
+    padding: 0px;
+    width: auto;
+`
+
+const FirstColumnCell = styled(TableCell)`
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    border: 1px solid;
+    padding: 0px;
+    width: auto;
 `
 
 const TableBodyCell = styled(TableCell)`
-    font-size: 14px;
+    font-size: 9px;
     text-align: center;
     border: 1px solid;
+    padding: 4px;
+    width: auto;
 `
 
 const tableData = [
@@ -63,9 +74,10 @@ const reducer = (state, action) => {
 const ChartContent = () => {
     const { airesults } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
-    const {
-        updatedTableData
-    } = state
+    const { updatedTableData } = state
+    const [chartType, setChartType] = useState('機台')
+    const [showTable, setShowTable] = useState(false)
+    const [combinedData, setCombinedData] = useState([])
 
     // 監控鍵盤按鍵
     const handleKeyPress = (e) => {
@@ -76,20 +88,18 @@ const ChartContent = () => {
 
     // 提交查詢條件
     const searchSubmit = async () => {
-        const threeMonthsData = filterDataByMonthRange(airesults, 3); // 篩選過去三個月資料
-        const fiveWeeksData = filterDataByWeekRange(airesults, 4); // 篩選過去五週資料
-        const sevenDaysData = filterDataByDateRange(airesults, 7); // 篩選過去七天資料
+        const threeMonthsData = filterDataByMonthRange(airesults, 3)
+        const fiveWeeksData = filterDataByWeekRange(airesults, 2)
+        const sevenDaysData = filterDataByDateRange(airesults, 7)
 
-        // 使用 calculateAverages 計算平均值
-        const threeMonthsAverage = calculateAverages(threeMonthsData, 'monthly');
-        const fiveWeeksAverage = calculateAverages(fiveWeeksData, 'weekly');
-        const sevenDaysAverage = calculateAverages(sevenDaysData, 'daily');
+        const threeMonthsAverage = calculateAverages(threeMonthsData, 'monthly')
+        const fiveWeeksAverage = calculateAverages(fiveWeeksData, 'weekly')
+        const sevenDaysAverage = calculateAverages(sevenDaysData, 'daily')
         const combinedData = threeMonthsAverage.concat(fiveWeeksAverage, sevenDaysAverage);
 
-        // 輸出結果
-        // console.log('近五週平均值:', fiveWeeksAverage);
         dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateTableData(combinedData) })
-        console.log('平均值合併:', combinedData);
+        setShowTable(true)
+        setCombinedData(combinedData)
     }
 
     // 更新表格資料
@@ -162,11 +172,7 @@ const ChartContent = () => {
                             row
                             defaultValue='機台'
                             onChange={(event) => {
-                                if (event.target.value === '機台') {
-                                    setTitle(`Pass & Overkill rate By Machine： ${selectedMachine}`)
-                                } else {
-                                    setTitle(`Pass & Overkill rate By BD： ${selectedBD}`)
-                                }
+                                setChartType(event.target.value)
                             }}
                         >
                             <FormControlLabel value='BD圖' control={<Radio sx={{ color: grey[600] }} />} label='BD圖' />
@@ -176,29 +182,42 @@ const ChartContent = () => {
                                 control={<Radio sx={{ color: grey[600] }} />}
                                 label='機台'
                             />
+                            <FormControlLabel
+                                value='作業數量'
+                                control={<Radio sx={{ color: grey[600] }} />}
+                                label='作業數量'
+                            />
                         </RadioGroup>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                        <EditIcon />
-                        <span style={{ padding: 10 }}>BD圖號： </span>
-                        <Autocomplete
-                            size='small'
-                            sx={{ width: 230 }}
-                            options={bdOptions}
-                            getOptionLabel={(option) => option.title}
-                            isOptionEqualToValue={(option, value) => option.title === value.title}
-                            renderInput={(params) => <TextField {...params} placeholder={'BD圖號'} />}
-                        />
-                        <EditIcon style={{ marginLeft: 80 }} />
-                        <span style={{ padding: 10 }}>機台號： </span>
-                        <Autocomplete
-                            size='small'
-                            sx={{ width: 210 }}
-                            options={machineOptions}
-                            getOptionLabel={(option) => option.title}
-                            isOptionEqualToValue={(option, value) => option.title === value.title}
-                            renderInput={(params) => <TextField {...params} placeholder={'機台號'} />}
-                        />
+                        {chartType !== '機台' && (
+                            <>
+                                <EditIcon />
+                                <span style={{ padding: 10 }}>BD圖號： </span>
+                                <Autocomplete
+                                    size='small'
+                                    sx={{ width: 230 }}
+                                    options={bdOptions}
+                                    getOptionLabel={(option) => option.title}
+                                    isOptionEqualToValue={(option, value) => option.title === value.title}
+                                    renderInput={(params) => <TextField {...params} placeholder={'BD圖號'} />}
+                                />
+                            </>
+                        )}
+                        {chartType !== 'BD圖' && (
+                            <>
+                                <EditIcon style={{ marginLeft: chartType !== '機台' ? 80 : 0 }} />
+                                <span style={{ padding: 10 }}>機台號： </span>
+                                <Autocomplete
+                                    size='small'
+                                    sx={{ width: 210 }}
+                                    options={machineOptions}
+                                    getOptionLabel={(option) => option.title}
+                                    isOptionEqualToValue={(option, value) => option.title === value.title}
+                                    renderInput={(params) => <TextField {...params} placeholder={'機台號'} />}
+                                />
+                            </>
+                        )}
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '10px' }}>
                         <Button
@@ -212,45 +231,34 @@ const ChartContent = () => {
                         <Button variant='contained'>Export</Button>
                     </Box>
                 </Box>
-                <TableContainer component={Paper}>
-                    <Table sx={{ minWidth: 650 }} size="small" aria-label="simple table">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>DATE</TableCell>
-                                <TableCell>Jun</TableCell>
-                                <TableCell>Jul</TableCell>
-                                <TableCell>Aug</TableCell>
-                                <TableCell>W29</TableCell>
-                                <TableCell>W30</TableCell>
-                                <TableCell>W31</TableCell>
-                                <TableCell>W32</TableCell>
-                                <TableCell>W33</TableCell>
-                                <TableCell>08/06</TableCell>
-                                <TableCell>08/07</TableCell>
-                                <TableCell>08/08</TableCell>
-                                <TableCell>08/09</TableCell>
-                                <TableCell>08/10</TableCell>
-                                <TableCell>08/11</TableCell>
-                                <TableCell>08/12</TableCell>
-                                {/* {combinedData.map((data) => (
-                                    <TableCell key={data.key}>{data.key}</TableCell>
-                                ))} */}
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {updatedTableData.map((row, rowIndex) => (
-                                <TableRow key={rowIndex}>
-                                    <FirstColumnCell>
-                                        {row.label}
-                                    </FirstColumnCell>
-                                    {row.data.map((value, colIndex) => (
-                                        <TableBodyCell key={colIndex}>{value}</TableBodyCell>
+                {showTable && (
+                    <TableContainer>
+                        <Table size="small">
+                            <TableHead>
+                                <TableRow>
+                                    <TableHeaderCell>DATE</TableHeaderCell>
+                                    {combinedData.map((data) => (
+                                        <TableHeaderCell key={data.key}>
+                                            {data.key.includes('-') ? data.key.substring(5) : data.key}
+                                        </TableHeaderCell>
                                     ))}
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                            </TableHead>
+                            <TableBody>
+                                {updatedTableData.map((row, rowIndex) => (
+                                    <TableRow key={rowIndex}>
+                                        <FirstColumnCell>
+                                            {row.label}
+                                        </FirstColumnCell>
+                                        {row.data.map((value, colIndex) => (
+                                            <TableBodyCell key={colIndex}>{value}</TableBodyCell>
+                                        ))}
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                )}
             </Card>
         </>
     )

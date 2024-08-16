@@ -2,7 +2,12 @@
 function calculateAverages(datas, period = 'daily') {
     const map = {}
     const getKey = (date, isWeekly, isMonthly) => {
-        if (isMonthly) return date.substring(0, 7) // 取得年月部分作為key
+        if (isMonthly) {
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const monthIndex = parseInt(date.substring(5, 7)) - 1;
+            return monthNames[monthIndex];
+        }
         if (isWeekly) return getWeekNumberForDate(date) // 取得週數作為key
         return date.substring(0, 10) // 使用日期作為key
     }
@@ -19,7 +24,6 @@ function calculateAverages(datas, period = 'daily') {
             }
         }
         const dateToAdd = Ao_Time_Start.substring(0, 10)
-        // const dateToAdd = period === 'monthly' ? Ao_Time_Start.substring(0, 7) : period === 'weekly' ? getWeekNumberForDate(Ao_Time_Start) : Ao_Time_Start.substring(0, 10)
         map[key].date.add(dateToAdd)
         map[key].Fail_Ppm.push(parseFloat(Fail_Ppm))
         map[key].Overkill_Rate.push(parseFloat(Overkill_Rate))
@@ -72,12 +76,25 @@ function filterDataByMonthRange(datas, months) {
 
 function filterDataByWeekRange(datas, weeks) {
     const now = new Date();
-    const pastDate = new Date(now);
-    pastDate.setDate(now.getDate() - weeks * 7);
+    now.setHours(0, 0, 0, 0); // 將時間設置為當天開始
+    const day = now.getDay();
+    const currentSunday = new Date(now);
+    currentSunday.setDate(now.getDate() - day); // 調整到當週的星期日
+    currentSunday.setHours(0, 0, 0, 0); // 設置為0點整
+
+    const pastDate = new Date(currentSunday);
+    pastDate.setDate(currentSunday.getDate() - weeks * 7);
+    pastDate.setHours(0, 0, 0, 0); // 設置為0點整
+    console.log('pastDate:', pastDate);
+
+    const endDate = new Date(currentSunday);
+    endDate.setDate(currentSunday.getDate() + 7);
+    endDate.setHours(0, 0, 0, 0); // 設置為0點整
+    console.log('endDate:', endDate);
 
     return datas.filter(({ Ao_Time_Start }) => {
         const date = new Date(Ao_Time_Start);
-        return date >= pastDate && date <= now;
+        return date >= pastDate && date < endDate;
     }).map(data => {
         data.weekNumber = getWeekNumberForDate(data.Ao_Time_Start);
         return data;
