@@ -77,28 +77,22 @@ function filterDataByMonthRange(datas, months) {
 function filterDataByWeekRange(datas, weeks) {
     const now = new Date();
     now.setHours(0, 0, 0, 0); // 將時間設置為當天開始
-    const day = now.getDay();
     const currentSunday = new Date(now);
-    currentSunday.setDate(now.getDate() - day); // 調整到當週的星期日
-    currentSunday.setHours(0, 0, 0, 0); // 設置為0點整
+    currentSunday.setDate(now.getDate() - now.getDay()); // 調整到當週的星期日
 
     const pastDate = new Date(currentSunday);
-    pastDate.setDate(currentSunday.getDate() - weeks * 7);
-    pastDate.setHours(0, 0, 0, 0); // 設置為0點整
-    console.log('pastDate:', pastDate);
+    pastDate.setDate(currentSunday.getDate() - (weeks - 1) * 7);
 
     const endDate = new Date(currentSunday);
     endDate.setDate(currentSunday.getDate() + 7);
-    endDate.setHours(0, 0, 0, 0); // 設置為0點整
-    console.log('endDate:', endDate);
 
     return datas.filter(({ Ao_Time_Start }) => {
         const date = new Date(Ao_Time_Start);
         return date >= pastDate && date < endDate;
-    }).map(data => {
-        data.weekNumber = getWeekNumberForDate(data.Ao_Time_Start);
-        return data;
-    });
+    }).map(data => ({
+        ...data,
+        weekNumber: getWeekNumberForDate(data.Ao_Time_Start)
+    }));
 }
 
 function filterDataByDateRange(datas, days) {

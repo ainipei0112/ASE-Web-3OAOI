@@ -89,7 +89,7 @@ const ChartContent = () => {
     // 提交查詢條件
     const searchSubmit = async () => {
         const threeMonthsData = filterDataByMonthRange(airesults, 3)
-        const fiveWeeksData = filterDataByWeekRange(airesults, 2)
+        const fiveWeeksData = filterDataByWeekRange(airesults, 5)
         const sevenDaysData = filterDataByDateRange(airesults, 7)
 
         const threeMonthsAverage = calculateAverages(threeMonthsData, 'monthly')
@@ -100,6 +100,7 @@ const ChartContent = () => {
         dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateTableData(combinedData) })
         setShowTable(true)
         setCombinedData(combinedData)
+        console.log('平均值合併:', combinedData);
     }
 
     // 更新表格資料
