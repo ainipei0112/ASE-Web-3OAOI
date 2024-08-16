@@ -4,10 +4,10 @@ function calculateAverages(datas, period = 'daily') {
     const getKey = (date, isWeekly, isMonthly) => {
         if (isMonthly) {
             const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            const monthIndex = parseInt(date.substring(5, 7)) - 1;
-            return monthNames[monthIndex];
-        } // 取得轉換月份簡碼作為key：Aug
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+            const monthIndex = parseInt(date.substring(5, 7)) - 1
+            return monthNames[monthIndex]
+        } // 轉換月份簡碼作為key：Aug
         if (isWeekly) return getWeekNumberForDate(date) // 取得週數作為key：W33
         return date.substring(0, 10) // 使用日期作為key：2024-08-16
     }
@@ -17,6 +17,7 @@ function calculateAverages(datas, period = 'daily') {
         const key = getKey(Ao_Time_Start, period === 'weekly', period === 'monthly')
         if (!map[key]) {
             map[key] = {
+                periodType: period,
                 date: new Set(),
                 Fail_Ppm: [],
                 Overkill_Rate: [],
@@ -32,10 +33,11 @@ function calculateAverages(datas, period = 'daily') {
 
     // 計算每組資料平均值並輸出
     const calculatedAverages = Object.keys(map).map((key) => {
-        const { date, Fail_Ppm, Overkill_Rate, Pass_Rate } = map[key]
+        const { date, Fail_Ppm, Overkill_Rate, Pass_Rate, periodType } = map[key]
         const getAverage = (arr) => arr.reduce((sum, value) => sum + value, 0) / arr.length
         return {
             key,
+            periodType,
             date: Array.from(date),
             averageFailPpm: getAverage(Fail_Ppm).toFixed(0),
             averageOverkillRate: getAverage(Overkill_Rate).toFixed(1),
@@ -56,58 +58,58 @@ function calculateAverages(datas, period = 'daily') {
 
 // 濾出前幾月的資料
 function filterDataByMonthRange(datas, months) {
-    const now = new Date();
-    const currentMonth = now.getMonth() + 1; // 獲取當前月份 (1-12)
-    const currentYear = now.getFullYear();
+    const now = new Date()
+    const currentMonth = now.getMonth() + 1 // 獲取當前月份 (1-12)
+    const currentYear = now.getFullYear()
 
     return datas.filter(({ Ao_Time_Start }) => {
-        const date = new Date(Ao_Time_Start);
-        const month = date.getMonth() + 1;
-        const year = date.getFullYear();
+        const date = new Date(Ao_Time_Start)
+        const month = date.getMonth() + 1
+        const year = date.getFullYear()
 
         // 判斷是否在指定的月份範圍內
         if (year === currentYear && month >= currentMonth - months + 1 && month <= currentMonth) {
-            return true;
+            return true
         } else if (year === currentYear - 1 && month >= 12 - (months - (currentMonth - 1))) {
-            return true;
+            return true
         }
-        return false;
-    });
+        return false
+    })
 }
 
 // 濾出前幾週的資料
 function filterDataByWeekRange(datas, weeks) {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0); // 將時間設置為當天開始
-    const currentSunday = new Date(now);
-    currentSunday.setDate(now.getDate() - now.getDay()); // 調整到當週的星期日
+    const now = new Date()
+    now.setHours(0, 0, 0, 0) // 將時間設置為當天開始
+    const currentSunday = new Date(now)
+    currentSunday.setDate(now.getDate() - now.getDay()) // 調整到當週的星期日
 
-    const pastDate = new Date(currentSunday);
-    pastDate.setDate(currentSunday.getDate() - (weeks - 1) * 7);
+    const pastDate = new Date(currentSunday)
+    pastDate.setDate(currentSunday.getDate() - (weeks - 1) * 7)
 
-    const endDate = new Date(currentSunday);
-    endDate.setDate(currentSunday.getDate() + 7);
+    const endDate = new Date(currentSunday)
+    endDate.setDate(currentSunday.getDate() + 7)
 
     return datas.filter(({ Ao_Time_Start }) => {
-        const date = new Date(Ao_Time_Start);
-        return date >= pastDate && date < endDate;
+        const date = new Date(Ao_Time_Start)
+        return date >= pastDate && date < endDate
     }).map(data => ({
         ...data,
         weekNumber: getWeekNumberForDate(data.Ao_Time_Start)
-    }));
+    }))
 }
 
 // 濾出前幾日的資料
 function filterDataByDateRange(datas, days) {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0); // 將時間設置為當天開始
-    const pastDate = new Date(now);
-    pastDate.setDate(now.getDate() - days - 1);
+    const now = new Date()
+    now.setHours(0, 0, 0, 0) // 將時間設置為當天開始
+    const pastDate = new Date(now)
+    pastDate.setDate(now.getDate() - days - 1)
 
     return datas.filter(({ Ao_Time_Start }) => {
-        const date = new Date(Ao_Time_Start);
-        return date >= pastDate && date <= now;
-    });
+        const date = new Date(Ao_Time_Start)
+        return date >= pastDate && date <= now
+    })
 }
 
 // 計算出日期所屬的週數

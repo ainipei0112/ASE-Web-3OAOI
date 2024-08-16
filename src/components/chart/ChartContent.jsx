@@ -3,6 +3,7 @@ import {
     Box,
     Button,
     Card,
+    CardHeader,
     Checkbox,
     FormControlLabel,
     Radio,
@@ -14,6 +15,8 @@ import {
     TableHead,
     TableRow,
     TextField,
+    ToggleButton,
+    ToggleButtonGroup
 } from '@mui/material'
 import { grey } from '@mui/material/colors'
 import BarChartIcon from '@mui/icons-material/BarChart'
@@ -60,6 +63,7 @@ const tableData = [
 ]
 
 const initialState = {
+    period: ['monthly', 'weekly', 'daily'],
     updatedTableData: tableData
 }
 
@@ -67,6 +71,8 @@ const reducer = (state, action) => {
     switch (action.type) {
         case 'UPDATE_TABLE_DATA':
             return { ...state, updatedTableData: action.payload }
+        case 'SET_PERIOD':
+            return { ...state, period: action.payload }
         default:
             return state
     }
@@ -75,12 +81,11 @@ const reducer = (state, action) => {
 const ChartContent = () => {
     const { airesults } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
-    const { updatedTableData } = state
+    const { updatedTableData, period } = state
     const [chartType, setChartType] = useState('BD圖')
     const [showTable, setShowTable] = useState(false)
     const [showChart, setShowChart] = useState(false); // 控制HighchartsReact元件的顯示狀態
     const [combinedData, setCombinedData] = useState([])
-    const [title, setTitle] = useState(`Pass & Overkill rate By `)
 
     // 監控鍵盤按鍵
     const handleKeyPress = (e) => {
@@ -146,13 +151,26 @@ const ChartContent = () => {
         return updatedData
     }
 
-    // 圖表資料
+    // 更新圖表資料
+    const filteredData = useMemo(() => {
+        let data = []
+        if (period.includes('monthly')) {
+            data = data.concat(combinedData.filter(d => d.periodType === 'monthly'))
+        }
+        if (period.includes('weekly')) {
+            data = data.concat(combinedData.filter(d => d.periodType === 'weekly'))
+        }
+        if (period.includes('daily')) {
+            data = data.concat(combinedData.filter(d => d.periodType === 'daily'))
+        }
+        return data
+    }, [period, combinedData])
+
+    // 圖表參數
     const options = useMemo(() => {
         return {
             // 圖表標題
-            title: {
-                text: title,
-            },
+            title: null,
             // 去除 Highcharts.com 字樣
             credits: {
                 enabled: false,
@@ -171,7 +189,7 @@ const ChartContent = () => {
             },
             // 橫座標軸
             xAxis: {
-                categories: combinedData.map(data => data.key.includes('-') ? data.key.substring(5) : data.key),
+                categories: filteredData.map(data => data.key.includes('-') ? data.key.substring(5) : data.key),
                 crosshair: true,
             },
             // 縱座標軸
@@ -208,9 +226,6 @@ const ChartContent = () => {
                             color: Highcharts.getOptions().colors[0],
                         },
                     },
-                    // stackLabels: {
-                    //     enabled: true,
-                    // },
                 },
             ],
             plotOptions: {
@@ -221,7 +236,6 @@ const ChartContent = () => {
                     },
                 },
                 spline: {
-                    // stacking: 'normal',
                     dataLabels: {
                         enabled: true,
                     },
@@ -232,7 +246,7 @@ const ChartContent = () => {
                     name: 'Fail PPM',
                     type: 'column',
                     yAxis: 1,
-                    data: combinedData.map(data => parseFloat(data.averageFailPpm))
+                    data: filteredData.map(data => parseFloat(data.averageFailPpm))
                 },
                 {
                     name: 'Pass Rate',
@@ -241,7 +255,7 @@ const ChartContent = () => {
                     tooltip: {
                         valueSuffix: '%',
                     },
-                    data: combinedData.map(data => parseFloat(data.averagePassRate))
+                    data: filteredData.map(data => parseFloat(data.averagePassRate))
                 },
                 {
                     name: 'Overkill Rate',
@@ -250,11 +264,11 @@ const ChartContent = () => {
                     tooltip: {
                         valueSuffix: '%',
                     },
-                    data: combinedData.map(data => parseFloat(data.averageOverkillRate))
+                    data: filteredData.map(data => parseFloat(data.averageOverkillRate))
                 }
             ]
         }
-    }, [airesults, combinedData])
+    }, [filteredData])
 
     return (
         <>
@@ -346,7 +360,29 @@ const ChartContent = () => {
                         <Button variant='contained'>Export</Button>
                     </Box>
                 </Box>
-                {showChart && <HighchartsReact highcharts={Highcharts} options={options} />}
+                {showChart && (
+                    <>
+                        <CardHeader
+                            action={
+                                <ToggleButtonGroup
+                                    color='primary'
+                                    value={period}
+                                    exclusive={false}
+                                    onChange={(event, newPeriod) => {
+                                        dispatch({ type: 'SET_PERIOD', payload: newPeriod })
+                                    }}
+                                >
+                                    <ToggleButton value='monthly'>月</ToggleButton>
+                                    <ToggleButton value='weekly'>週</ToggleButton>
+                                    <ToggleButton value='daily'>日</ToggleButton>
+                                </ToggleButtonGroup>
+                            }
+                            title='Pass & Overkill rate By'
+                            sx={{ textAlign: 'center', marginLeft: '100px' }}
+                        />
+                        <HighchartsReact highcharts={Highcharts} options={options} />
+                    </>
+                )}
                 {showTable && (
                     <TableContainer>
                         <Table size="small">
