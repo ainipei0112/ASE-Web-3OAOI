@@ -18,7 +18,8 @@ import {
 import { grey } from '@mui/material/colors'
 import BarChartIcon from '@mui/icons-material/BarChart'
 import EditIcon from '@mui/icons-material/Edit'
-
+import Highcharts from 'highcharts'
+import HighchartsReact from 'highcharts-react-official'
 import { styled } from '@mui/system'
 
 import { useContext, useMemo, useReducer, useState } from 'react'
@@ -51,9 +52,9 @@ const TableBodyCell = styled(TableCell)`
     padding: 4px;
     width: auto;
 `
-
+// 表格初始化
 const tableData = [
-    { label: 'FAIL PPM', data: Array(15).fill(0) },
+    { label: 'Fail PPM', data: Array(15).fill(0) },
     { label: 'Overkill Rate', data: Array(15).fill(0) },
     { label: 'Pass Rate', data: Array(15).fill(0) }
 ]
@@ -75,9 +76,11 @@ const ChartContent = () => {
     const { airesults } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
     const { updatedTableData } = state
-    const [chartType, setChartType] = useState('機台')
+    const [chartType, setChartType] = useState('BD圖')
     const [showTable, setShowTable] = useState(false)
+    const [showChart, setShowChart] = useState(false); // 控制HighchartsReact元件的顯示狀態
     const [combinedData, setCombinedData] = useState([])
+    const [title, setTitle] = useState(`Pass & Overkill rate By `)
 
     // 監控鍵盤按鍵
     const handleKeyPress = (e) => {
@@ -98,10 +101,29 @@ const ChartContent = () => {
         const combinedData = threeMonthsAverage.concat(fiveWeeksAverage, sevenDaysAverage);
 
         dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateTableData(combinedData) })
+        setShowChart(true)
         setShowTable(true)
         setCombinedData(combinedData)
         console.log('平均值合併:', combinedData);
     }
+
+    // BD選單
+    const bdOptions = useMemo(
+        () =>
+            [...new Set(airesults.map(({ Drawing_No }) => Drawing_No))]
+                .sort()
+                .map((Drawing_No) => ({ title: Drawing_No })),
+        [airesults],
+    )
+
+    // 機台選單
+    const machineOptions = useMemo(
+        () =>
+            [...new Set(airesults.map(({ Machine_Id }) => Machine_Id))]
+                .sort()
+                .map((Machine_Id) => ({ title: Machine_Id })),
+        [airesults],
+    )
 
     // 更新表格資料
     const updateTableData = (totals) => {
@@ -124,23 +146,115 @@ const ChartContent = () => {
         return updatedData
     }
 
-    // BD選單
-    const bdOptions = useMemo(
-        () =>
-            [...new Set(airesults.map(({ Drawing_No }) => Drawing_No))]
-                .sort()
-                .map((Drawing_No) => ({ title: Drawing_No })),
-        [airesults],
-    )
-
-    // 機台選單
-    const machineOptions = useMemo(
-        () =>
-            [...new Set(airesults.map(({ Machine_Id }) => Machine_Id))]
-                .sort()
-                .map((Machine_Id) => ({ title: Machine_Id })),
-        [airesults],
-    )
+    // 圖表資料
+    const options = useMemo(() => {
+        return {
+            // 圖表標題
+            title: {
+                text: title,
+            },
+            // 去除 Highcharts.com 字樣
+            credits: {
+                enabled: false,
+            },
+            // 無障礙功能關閉
+            accessibility: {
+                enabled: false,
+            },
+            // 圖例
+            legend: {
+                align: 'center',
+                verticalAlign: 'bottom',
+                backgroundColor:
+                    Highcharts.defaultOptions.legend.backgroundColor || // theme
+                    'rgba(255,255,255,0.25)',
+            },
+            // 橫座標軸
+            xAxis: {
+                categories: combinedData.map(data => data.key.includes('-') ? data.key.substring(5) : data.key),
+                crosshair: true,
+            },
+            // 縱座標軸
+            yAxis: [
+                {
+                    title: {
+                        //座標軸文字
+                        text: '',
+                        style: {
+                            color: Highcharts.getOptions().colors[1],
+                        },
+                    },
+                    labels: {
+                        //座標軸數值
+                        format: '{value}%',
+                        style: {
+                            color: Highcharts.getOptions().colors[1],
+                        },
+                    },
+                    opposite: true,
+                    min: 0,
+                    max: 100,
+                },
+                {
+                    title: {
+                        text: '',
+                        style: {
+                            color: Highcharts.getOptions().colors[0],
+                        },
+                    },
+                    labels: {
+                        format: '{value} ',
+                        style: {
+                            color: Highcharts.getOptions().colors[0],
+                        },
+                    },
+                    // stackLabels: {
+                    //     enabled: true,
+                    // },
+                },
+            ],
+            plotOptions: {
+                column: {
+                    stacking: 'normal',
+                    dataLabels: {
+                        enabled: true,
+                    },
+                },
+                spline: {
+                    // stacking: 'normal',
+                    dataLabels: {
+                        enabled: true,
+                    },
+                },
+            },
+            series: [
+                {
+                    name: 'Fail PPM',
+                    type: 'column',
+                    yAxis: 1,
+                    data: combinedData.map(data => parseFloat(data.averageFailPpm))
+                },
+                {
+                    name: 'Pass Rate',
+                    type: 'spline',
+                    yAxis: 0,
+                    tooltip: {
+                        valueSuffix: '%',
+                    },
+                    data: combinedData.map(data => parseFloat(data.averagePassRate))
+                },
+                {
+                    name: 'Overkill Rate',
+                    type: 'spline',
+                    yAxis: 0,
+                    tooltip: {
+                        valueSuffix: '%',
+                    },
+                    data: combinedData.map(data => parseFloat(data.averageOverkillRate))
+                }
+            ]
+        }
+    }, [airesults, combinedData])
 
     return (
         <>
@@ -171,7 +285,7 @@ const ChartContent = () => {
                         <span style={{ padding: 10 }}>圖表類型： </span>
                         <RadioGroup
                             row
-                            defaultValue='機台'
+                            defaultValue='BD圖'
                             onChange={(event) => {
                                 setChartType(event.target.value)
                             }}
@@ -232,6 +346,7 @@ const ChartContent = () => {
                         <Button variant='contained'>Export</Button>
                     </Box>
                 </Box>
+                {showChart && <HighchartsReact highcharts={Highcharts} options={options} />}
                 {showTable && (
                     <TableContainer>
                         <Table size="small">

@@ -7,9 +7,9 @@ function calculateAverages(datas, period = 'daily') {
                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
             const monthIndex = parseInt(date.substring(5, 7)) - 1;
             return monthNames[monthIndex];
-        }
-        if (isWeekly) return getWeekNumberForDate(date) // 取得週數作為key
-        return date.substring(0, 10) // 使用日期作為key
+        } // 取得轉換月份簡碼作為key：Aug
+        if (isWeekly) return getWeekNumberForDate(date) // 取得週數作為key：W33
+        return date.substring(0, 10) // 使用日期作為key：2024-08-16
     }
 
     // 根據key判別當前資料週期
@@ -37,9 +37,9 @@ function calculateAverages(datas, period = 'daily') {
         return {
             key,
             date: Array.from(date),
-            averageFailPpm: getAverage(Fail_Ppm).toFixed(2),
-            averageOverkillRate: getAverage(Overkill_Rate).toFixed(2),
-            averagePassRate: getAverage(Pass_Rate).toFixed(2),
+            averageFailPpm: getAverage(Fail_Ppm).toFixed(0),
+            averageOverkillRate: getAverage(Overkill_Rate).toFixed(1),
+            averagePassRate: getAverage(Pass_Rate).toFixed(1),
         }
     })
 
@@ -54,6 +54,7 @@ function calculateAverages(datas, period = 'daily') {
     return calculatedAverages
 }
 
+// 濾出前幾月的資料
 function filterDataByMonthRange(datas, months) {
     const now = new Date();
     const currentMonth = now.getMonth() + 1; // 獲取當前月份 (1-12)
@@ -74,6 +75,7 @@ function filterDataByMonthRange(datas, months) {
     });
 }
 
+// 濾出前幾週的資料
 function filterDataByWeekRange(datas, weeks) {
     const now = new Date();
     now.setHours(0, 0, 0, 0); // 將時間設置為當天開始
@@ -95,8 +97,10 @@ function filterDataByWeekRange(datas, weeks) {
     }));
 }
 
+// 濾出前幾日的資料
 function filterDataByDateRange(datas, days) {
     const now = new Date();
+    now.setHours(0, 0, 0, 0); // 將時間設置為當天開始
     const pastDate = new Date(now);
     pastDate.setDate(now.getDate() - days - 1);
 
