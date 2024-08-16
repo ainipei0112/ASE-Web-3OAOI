@@ -24,8 +24,7 @@ import EditIcon from '@mui/icons-material/Edit'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 import { styled } from '@mui/system'
-
-import { useContext, useMemo, useReducer, useState } from 'react'
+import { useContext, useMemo, useReducer } from 'react'
 import { AppContext } from '/src/Context.jsx'
 import { calculateAverages, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '/src/Function'
 
@@ -55,6 +54,7 @@ const TableBodyCell = styled(TableCell)`
     padding: 4px;
     width: auto;
 `
+
 // 表格初始化
 const tableData = [
     { label: 'Fail PPM', data: Array(15).fill(0) },
@@ -64,7 +64,11 @@ const tableData = [
 
 const initialState = {
     period: ['monthly', 'weekly', 'daily'],
-    updatedTableData: tableData
+    updatedTableData: tableData,
+    chartType: 'BD圖',
+    showTable: false,
+    showChart: false,
+    combinedData: []
 }
 
 const reducer = (state, action) => {
@@ -73,6 +77,14 @@ const reducer = (state, action) => {
             return { ...state, updatedTableData: action.payload }
         case 'SET_PERIOD':
             return { ...state, period: action.payload }
+        case 'SET_CHART_TYPE':
+            return { ...state, chartType: action.payload }
+        case 'TOGGLE_SHOW_TABLE':
+            return { ...state, showTable: action.payload }
+        case 'TOGGLE_SHOW_CHART':
+            return { ...state, showChart: action.payload }
+        case 'SET_COMBINED_DATA':
+            return { ...state, combinedData: action.payload }
         default:
             return state
     }
@@ -81,11 +93,7 @@ const reducer = (state, action) => {
 const ChartContent = () => {
     const { aoiData, searchAiresult } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
-    const { updatedTableData, period } = state
-    const [chartType, setChartType] = useState('BD圖')
-    const [showTable, setShowTable] = useState(false)
-    const [showChart, setShowChart] = useState(false); // 控制HighchartsReact元件的顯示狀態
-    const [combinedData, setCombinedData] = useState([])
+    const { updatedTableData, period, chartType, showTable, showChart, combinedData } = state
 
     // 監控鍵盤按鍵
     const handleKeyPress = (e) => {
@@ -111,9 +119,9 @@ const ChartContent = () => {
     const searchSubmit = async () => {
         const combinedData = processData();
         dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateTableData(combinedData) })
-        setShowChart(true)
-        setShowTable(true)
-        setCombinedData(combinedData)
+        dispatch({ type: 'TOGGLE_SHOW_CHART', payload: true })
+        dispatch({ type: 'TOGGLE_SHOW_TABLE', payload: true })
+        dispatch({ type: 'SET_COMBINED_DATA', payload: combinedData })
         console.log('平均值合併:', combinedData);
     }
 
@@ -304,14 +312,15 @@ const ChartContent = () => {
                         <span style={{ padding: 10 }}>圖表類型： </span>
                         <RadioGroup
                             row
-                            defaultValue='BD圖'
-                            onChange={(event) => {
-                                setChartType(event.target.value)
-                            }}
+                            value={chartType}
+                            onChange={(event) => dispatch({ type: 'SET_CHART_TYPE', payload: event.target.value })}
                         >
-                            <FormControlLabel value='BD圖' control={<Radio sx={{ color: grey[600] }} />} label='BD圖' />
                             <FormControlLabel
-                                defaultChecked
+                                value='BD圖'
+                                control={<Radio sx={{ color: grey[600] }} />}
+                                label='BD圖'
+                            />
+                            <FormControlLabel
                                 value='機台'
                                 control={<Radio sx={{ color: grey[600] }} />}
                                 label='機台'
