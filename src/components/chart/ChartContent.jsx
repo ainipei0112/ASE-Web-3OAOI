@@ -66,6 +66,7 @@ const initialState = {
     period: ['monthly', 'weekly', 'daily'],
     updatedTableData: tableData,
     chartType: 'BD圖',
+    selectedBD: null,
     showTable: false,
     showChart: false,
     combinedData: []
@@ -79,6 +80,8 @@ const reducer = (state, action) => {
             return { ...state, period: action.payload }
         case 'SET_CHART_TYPE':
             return { ...state, chartType: action.payload }
+        case 'SELECT_BD':
+            return { ...state, selectedBD: action.payload }
         case 'TOGGLE_SHOW_TABLE':
             return { ...state, showTable: action.payload }
         case 'TOGGLE_SHOW_CHART':
@@ -91,9 +94,17 @@ const reducer = (state, action) => {
 }
 
 const ChartContent = () => {
-    const { aoiData, searchAiresult } = useContext(AppContext)
+    const { aoiData, searchByDrawingNo } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
-    const { updatedTableData, period, chartType, showTable, showChart, combinedData } = state
+    const {
+        updatedTableData,
+        period,
+        chartType,
+        selectedBD,
+        showTable,
+        showChart,
+        combinedData
+    } = state
 
     // 監控鍵盤按鍵
     const handleKeyPress = (e) => {
@@ -117,6 +128,8 @@ const ChartContent = () => {
 
     // 提交查詢條件
     const searchSubmit = async () => {
+        const result = await searchByDrawingNo(selectedBD)
+        console.log(result)
         const combinedData = processData();
         dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateTableData(combinedData) })
         dispatch({ type: 'TOGGLE_SHOW_CHART', payload: true })
@@ -344,6 +357,9 @@ const ChartContent = () => {
                                     getOptionLabel={(option) => option.title}
                                     isOptionEqualToValue={(option, value) => option.title === value.title}
                                     renderInput={(params) => <TextField {...params} placeholder={'BD圖號'} />}
+                                    onChange={(event, newValue) => {
+                                        dispatch({ type: 'SELECT_BD', payload: newValue.title })
+                                    }}
                                 />
                             </>
                         )}

@@ -1,23 +1,21 @@
 import useSWR from 'swr'
 
+const fetcher = async (url, body) => {
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    })
+    const data = await res.json()
+    if (data.success) return data.results
+    throw new Error(data.msg)
+}
+
 const Actions = () => {
-    const {
-        data: aoiData,
-        error,
-        revalidate,
-    } = useSWR(
+    const { data: aoiData = [], error, revalidate } = useSWR(
         'http://10.11.33.122:1234/thirdAOI.php',
-        async () => {
-            const res = await fetch('http://10.11.33.122:1234/thirdAOI.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'get3oaoidata' }),
-            })
-            const data = await res.json()
-            if (data.success) return data.results
-            throw new Error(data.msg)
-        },
-        { revalidateOnFocus: false, revalidateOnReconnect: false },
+        () => fetcher('http://10.11.33.122:1234/thirdAOI.php', { action: 'get3oaoidata' }),
+        { revalidateOnFocus: false, revalidateOnReconnect: false }
     )
 
     if (error) {
@@ -27,12 +25,16 @@ const Actions = () => {
 
     const searchThirdAoiData = () => {
         revalidate()
-        return aoiData
+    }
+
+    const searchByDrawingNo = async (drawingNo) => {
+        return await fetcher('http://10.11.33.122:1234/thirdAOI.php', { action: 'searchByDrawingNo', drawingNo })
     }
 
     return {
-        aoiData: aoiData || [],
+        aoiData,
         searchThirdAoiData,
+        searchByDrawingNo,
     }
 }
 
