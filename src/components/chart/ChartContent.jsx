@@ -361,7 +361,11 @@ const ChartContent = () => {
                                     isOptionEqualToValue={(option, value) => option.title === value.title}
                                     renderInput={(params) => <TextField {...params} placeholder={'BD圖號'} />}
                                     onChange={(event, newValue) => {
-                                        dispatch({ type: 'SELECT_BD', payload: newValue.title })
+                                        if (newValue === null) {
+                                            dispatch({ type: 'SELECT_BD', payload: null });
+                                        } else {
+                                            dispatch({ type: 'SELECT_BD', payload: newValue.title });
+                                        }
                                     }}
                                 />
                             </>
@@ -378,7 +382,11 @@ const ChartContent = () => {
                                     isOptionEqualToValue={(option, value) => option.title === value.title}
                                     renderInput={(params) => <TextField {...params} placeholder={'機台號'} />}
                                     onChange={(event, newValue) => {
-                                        dispatch({ type: 'SELECT_MACHINE', payload: newValue.title })
+                                        if (newValue === null) {
+                                            dispatch({ type: 'SELECT_MACHINE', payload: null });
+                                        } else {
+                                            dispatch({ type: 'SELECT_MACHINE', payload: newValue.title });
+                                        }
                                     }}
                                 />
                             </>
