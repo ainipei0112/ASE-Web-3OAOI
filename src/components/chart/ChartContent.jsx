@@ -67,6 +67,7 @@ const initialState = {
     updatedTableData: tableData,
     chartType: 'BD圖',
     selectedBD: null,
+    selectedMachine: null,
     showTable: false,
     showChart: false,
     combinedData: []
@@ -82,6 +83,8 @@ const reducer = (state, action) => {
             return { ...state, chartType: action.payload }
         case 'SELECT_BD':
             return { ...state, selectedBD: action.payload }
+        case 'SELECT_MACHINE':
+            return { ...state, selectedMachine: action.payload }
         case 'TOGGLE_SHOW_TABLE':
             return { ...state, showTable: action.payload }
         case 'TOGGLE_SHOW_CHART':
@@ -101,6 +104,7 @@ const ChartContent = () => {
         period,
         chartType,
         selectedBD,
+        selectedMachine,
         showTable,
         showChart,
         combinedData
@@ -114,10 +118,10 @@ const ChartContent = () => {
     }
 
     // 處理並整合各週期資料
-    const processData = () => {
-        const threeMonthsData = filterDataByMonthRange(aoiData, 3) //三月
-        const fiveWeeksData = filterDataByWeekRange(aoiData, 5) //五週
-        const sevenDaysData = filterDataByDateRange(aoiData, 7) //七日
+    const processData = (searchData) => {
+        const threeMonthsData = filterDataByMonthRange(searchData, 3) //三月
+        const fiveWeeksData = filterDataByWeekRange(searchData, 5) //五週
+        const sevenDaysData = filterDataByDateRange(searchData, 7) //七日
 
         // 計算平均並合併資料
         const threeMonthsAverage = calculateAverages(threeMonthsData, 'monthly')
@@ -128,9 +132,8 @@ const ChartContent = () => {
 
     // 提交查詢條件
     const searchSubmit = async () => {
-        const result = await searchByDrawingNo(selectedBD)
-        console.log(result)
-        const combinedData = processData();
+        const searchData = await searchByDrawingNo(selectedBD, selectedMachine)
+        const combinedData = processData(searchData)
         dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateTableData(combinedData) })
         dispatch({ type: 'TOGGLE_SHOW_CHART', payload: true })
         dispatch({ type: 'TOGGLE_SHOW_TABLE', payload: true })
@@ -374,6 +377,9 @@ const ChartContent = () => {
                                     getOptionLabel={(option) => option.title}
                                     isOptionEqualToValue={(option, value) => option.title === value.title}
                                     renderInput={(params) => <TextField {...params} placeholder={'機台號'} />}
+                                    onChange={(event, newValue) => {
+                                        dispatch({ type: 'SELECT_MACHINE', payload: newValue.title })
+                                    }}
                                 />
                             </>
                         )}

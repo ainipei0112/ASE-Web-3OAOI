@@ -27,8 +27,8 @@ const Actions = () => {
         revalidate()
     }
 
-    const searchByDrawingNo = async (drawingNo) => {
-        return await fetcher('http://10.11.33.122:1234/thirdAOI.php', { action: 'searchByDrawingNo', drawingNo })
+    const searchByDrawingNo = async (drawingNo, machineId) => {
+        return await fetcher('http://10.11.33.122:1234/thirdAOI.php', { action: 'getDataByCondition', drawingNo, machineId })
     }
 
     return {
