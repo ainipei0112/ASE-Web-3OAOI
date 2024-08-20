@@ -84,7 +84,7 @@ const reducer = (state, action) => {
         case 'SET_PERIOD':
             return { ...state, period: action.payload }
         case 'SET_CHART_TYPE':
-            return { ...state, chartType: action.payload }
+            return { ...state, selectedBD: null, selectedMachine: null, chartType: action.payload }
         case 'SELECT_BD':
             return { ...state, selectedBD: action.payload }
         case 'SELECT_MACHINE':
@@ -386,12 +386,12 @@ const ChartContent = () => {
                 </Box>
                 <Box sx={{ padding: '10px' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                        <EditIcon />
+                        {/* <EditIcon />
                         <span style={{ padding: 10 }}>Period： </span>
                         <Checkbox defaultChecked sx={{ color: 'gray' }} /> Daily
                         <Checkbox sx={{ color: 'gray' }} /> Weekly
                         <Checkbox sx={{ color: 'gray' }} /> Monthly
-                        <span style={{ padding: 30 }}> </span>
+                        <span style={{ padding: 30 }}> </span> */}
                         <EditIcon />
                         <span style={{ padding: 10 }}>圖表類型： </span>
                         <RadioGroup
