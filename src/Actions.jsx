@@ -27,14 +27,19 @@ const Actions = () => {
         revalidate()
     }
 
-    const searchByDrawingNo = async (drawingNo, machineId) => {
+    const searchByCondition = async (drawingNo, machineId) => {
         return await fetcher('http://10.11.33.122:1234/thirdAOI.php', { action: 'getDataByCondition', drawingNo, machineId })
+    }
+
+    const exportdataByCondition = async (drawingNo, machineId) => {
+        return await fetcher('http://10.11.33.122:1234/thirdAOI.php', { action: 'exportDataByCondition', drawingNo, machineId })
     }
 
     return {
         aoiData,
         searchThirdAoiData,
-        searchByDrawingNo,
+        searchByCondition,
+        exportdataByCondition,
     }
 }
 

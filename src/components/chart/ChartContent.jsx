@@ -28,6 +28,9 @@ import { useContext, useMemo, useReducer } from 'react'
 import { AppContext } from '/src/Context.jsx'
 import { calculateAverages, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '/src/Function'
 
+import ExcelJS from 'exceljs'
+import { saveAs } from 'file-saver'
+
 // 定義樣式
 const TableHeaderCell = styled(TableCell)`
     font-size: 12px;
@@ -70,6 +73,7 @@ const initialState = {
     selectedMachine: null,
     showTable: false,
     showChart: false,
+    chartTitle: '',
     combinedData: []
 }
 
@@ -89,6 +93,8 @@ const reducer = (state, action) => {
             return { ...state, showTable: action.payload }
         case 'TOGGLE_SHOW_CHART':
             return { ...state, showChart: action.payload }
+        case 'SET_CHART_TITLE':
+            return { ...state, chartTitle: action.payload }
         case 'SET_COMBINED_DATA':
             return { ...state, combinedData: action.payload }
         default:
@@ -97,7 +103,7 @@ const reducer = (state, action) => {
 }
 
 const ChartContent = () => {
-    const { aoiData, searchByDrawingNo } = useContext(AppContext)
+    const { aoiData, searchByCondition, exportdataByCondition } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
     const {
         updatedTableData,
@@ -107,16 +113,41 @@ const ChartContent = () => {
         selectedMachine,
         showTable,
         showChart,
+        chartTitle,
         combinedData
     } = state
 
     // 監控鍵盤按鍵
     const handleKeyPress = (e) => {
         if (e.key === 'Enter') {
-            searchSubmit()
+            handleQuery()
         }
     }
 
+    // 提交查詢條件
+    const handleQuery = async () => {
+        const searchData = await searchByCondition(selectedBD, selectedMachine)
+        const combinedData = processData(searchData)
+        dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateTableData(combinedData) })
+        dispatch({ type: 'TOGGLE_SHOW_CHART', payload: true })
+        dispatch({ type: 'TOGGLE_SHOW_TABLE', payload: true })
+
+        let newTitle = 'Fail PPM & Pass & Overkill rate By '
+        if (chartType === 'BD圖') {
+            newTitle += selectedBD || 'ALL'
+        } else if (chartType === '機台') {
+            newTitle += selectedMachine || 'ALL'
+        }
+
+        dispatch({ type: 'SET_CHART_TITLE', payload: newTitle })
+        dispatch({ type: 'SET_COMBINED_DATA', payload: combinedData })
+    }
+
+    // 匯出查詢資料
+    const handleExport = async () => {
+        const exportExcel = await exportdataByCondition(selectedBD, selectedMachine)
+        exportToExcel(exportExcel, '3rdaoidata_(Security C)')
+    }
     // 處理並整合各週期資料
     const processData = (searchData) => {
         const threeMonthsData = filterDataByMonthRange(searchData, 3) //三月
@@ -127,18 +158,55 @@ const ChartContent = () => {
         const threeMonthsAverage = calculateAverages(threeMonthsData, 'monthly')
         const fiveWeeksAverage = calculateAverages(fiveWeeksData, 'weekly')
         const sevenDaysAverage = calculateAverages(sevenDaysData, 'daily')
-        return threeMonthsAverage.concat(fiveWeeksAverage, sevenDaysAverage);
+        return threeMonthsAverage.concat(fiveWeeksAverage, sevenDaysAverage)
     }
 
-    // 提交查詢條件
-    const searchSubmit = async () => {
-        const searchData = await searchByDrawingNo(selectedBD, selectedMachine)
-        const combinedData = processData(searchData)
-        dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateTableData(combinedData) })
-        dispatch({ type: 'TOGGLE_SHOW_CHART', payload: true })
-        dispatch({ type: 'TOGGLE_SHOW_TABLE', payload: true })
-        dispatch({ type: 'SET_COMBINED_DATA', payload: combinedData })
-        console.log('平均值合併:', combinedData);
+    // 匯出Excel
+    const exportToExcel = (data, fileName) => {
+        const workbook = new ExcelJS.Workbook()
+        const worksheet = workbook.addWorksheet('Sheet1')
+
+        // 設置列標題
+        worksheet.columns = [
+            { header: '日期', key: 'Ao_Time_Start', width: 20 },
+            { header: 'Schedule', key: 'Device_Id', width: 30 },
+            { header: '條號', key: 'Strip_No', width: 10 },
+            { header: 'Fail Ppm', key: 'Fail_Ppm', width: 10 },
+            { header: 'Pass Rate(%)', key: 'Pass_Rate', width: 15 },
+            { header: 'Overall Overkill率(%)', key: 'Overkill_Rate', width: 20 },
+            { header: '機台 No.', key: 'Machine_Id', width: 10 },
+            { header: '圖號', key: 'Drawing_No', width: 20 }
+        ]
+
+        // 添加數據
+        data.forEach(item => {
+            worksheet.addRow(item)
+        })
+
+        // 設置格式
+        worksheet.getRow(1).font = { bold: true }
+        worksheet.eachRow((row, rowNumber) => {
+            row.eachCell((cell, colNumber) => {
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                }
+                if (rowNumber === 1) {
+                    cell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFFF00' }
+                    }
+                }
+            })
+        })
+
+        // 保存文件
+        workbook.xlsx.writeBuffer().then(buffer => {
+            saveAs(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `${fileName}.xlsx`)
+        })
     }
 
     // BD選單
@@ -362,9 +430,9 @@ const ChartContent = () => {
                                     renderInput={(params) => <TextField {...params} placeholder={'BD圖號'} />}
                                     onChange={(event, newValue) => {
                                         if (newValue === null) {
-                                            dispatch({ type: 'SELECT_BD', payload: null });
+                                            dispatch({ type: 'SELECT_BD', payload: null })
                                         } else {
-                                            dispatch({ type: 'SELECT_BD', payload: newValue.title });
+                                            dispatch({ type: 'SELECT_BD', payload: newValue.title })
                                         }
                                     }}
                                 />
@@ -383,9 +451,9 @@ const ChartContent = () => {
                                     renderInput={(params) => <TextField {...params} placeholder={'機台號'} />}
                                     onChange={(event, newValue) => {
                                         if (newValue === null) {
-                                            dispatch({ type: 'SELECT_MACHINE', payload: null });
+                                            dispatch({ type: 'SELECT_MACHINE', payload: null })
                                         } else {
-                                            dispatch({ type: 'SELECT_MACHINE', payload: newValue.title });
+                                            dispatch({ type: 'SELECT_MACHINE', payload: newValue.title })
                                         }
                                     }}
                                 />
@@ -396,12 +464,17 @@ const ChartContent = () => {
                         <Button
                             variant='contained'
                             sx={{ marginRight: '10px' }}
-                            onClick={searchSubmit}
+                            onClick={handleQuery}
                             onKeyDown={handleKeyPress}
                         >
                             Query
                         </Button>
-                        <Button variant='contained'>Export</Button>
+                        <Button
+                            variant='contained'
+                            onClick={handleExport}
+                        >
+                            Export
+                        </Button>
                     </Box>
                 </Box>
                 {showChart && (
@@ -421,7 +494,7 @@ const ChartContent = () => {
                                     <ToggleButton value='daily'>日</ToggleButton>
                                 </ToggleButtonGroup>
                             }
-                            title='Pass & Overkill rate By'
+                            title={state.chartTitle}
                             sx={{ textAlign: 'center', marginLeft: '100px' }}
                         />
                         <HighchartsReact highcharts={Highcharts} options={options} />

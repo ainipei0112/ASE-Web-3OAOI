@@ -94,7 +94,7 @@ const reducer = (state, action) => {
 }
 
 const ChartContent = () => {
-    const { aoiData, searchByDrawingNo } = useContext(AppContext)
+    const { aoiData, searchByCondition } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
     const {
         updatedTableData,
@@ -128,7 +128,7 @@ const ChartContent = () => {
 
     // 提交查詢條件
     const searchSubmit = async () => {
-        const result = await searchByDrawingNo(selectedBD)
+        const result = await searchByCondition(selectedBD)
         console.log(result)
         const combinedData = processData();
         dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateTableData(combinedData) })
