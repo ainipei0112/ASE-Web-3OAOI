@@ -428,6 +428,8 @@ const ChartContent = () => {
                                     getOptionLabel={(option) => option.title}
                                     isOptionEqualToValue={(option, value) => option.title === value.title}
                                     renderInput={(params) => <TextField {...params} placeholder={'BD圖號'} />}
+                                    key={`bd-${chartType}`}
+                                    value={selectedBD ? { title: selectedBD } : null}
                                     onChange={(event, newValue) => {
                                         if (newValue === null) {
                                             dispatch({ type: 'SELECT_BD', payload: null })
@@ -449,6 +451,8 @@ const ChartContent = () => {
                                     getOptionLabel={(option) => option.title}
                                     isOptionEqualToValue={(option, value) => option.title === value.title}
                                     renderInput={(params) => <TextField {...params} placeholder={'機台號'} />}
+                                    key={`machine-${chartType}`}
+                                    value={selectedMachine ? { title: selectedMachine } : null}
                                     onChange={(event, newValue) => {
                                         if (newValue === null) {
                                             dispatch({ type: 'SELECT_MACHINE', payload: null })
