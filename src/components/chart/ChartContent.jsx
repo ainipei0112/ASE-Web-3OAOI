@@ -26,7 +26,7 @@ import HighchartsReact from 'highcharts-react-official'
 import { styled } from '@mui/system'
 import { useContext, useMemo, useReducer } from 'react'
 import { AppContext } from '/src/Context.jsx'
-import { calculateAverages, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '/src/Function'
+import { calculateAverages, getWeekNumberForDate, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '/src/Function'
 
 import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
@@ -176,25 +176,41 @@ const ChartContent = () => {
         const workbook = new ExcelJS.Workbook()
         const worksheet = workbook.addWorksheet('Sheet1')
 
-        // 設置列標題
+        // 標題列
         worksheet.columns = [
-            { header: '日期', key: 'Ao_Time_Start', width: 20 },
-            { header: 'Device Id', key: 'Device_Id', width: 30 },
-            { header: '條號', key: 'Strip_No', width: 10 },
-            { header: 'Fail Ppm', key: 'Fail_Ppm', width: 10 },
-            { header: 'Pass Rate(%)', key: 'Pass_Rate', width: 15 },
-            { header: 'Overall Overkill率(%)', key: 'Overkill_Rate', width: 20 },
-            { header: '機台 No.', key: 'Machine_Id', width: 10 },
-            { header: '圖號', key: 'Drawing_No', width: 20 }
+            { header: '日期', key: 'Ao_Time_Start' },
+            { header: 'Schedule', key: 'Schedule' },
+            { header: '條號', key: 'Strip_No', style: { numFmt: '0' } },
+            { header: 'Fail Ppm', key: 'Fail_Ppm', style: { numFmt: '0' } },
+            { header: 'Pass Rate(%)', key: 'Pass_Rate', style: { numFmt: '0.0%' } },
+            { header: 'Overkill Rate(%)', key: 'Overkill_Rate', style: { numFmt: '0.0%' } },
+            { header: '機台 No.', key: 'Machine_Id' },
+            { header: 'Device Id', key: 'Device_Id' },
+            { header: '圖號', key: 'Drawing_No' },
+            { header: '週別', key: 'Week_Number' }
         ]
 
-        // 添加數據
+        // 根據時間排序資料
+        data.sort((a, b) => new Date(a.Ao_Time_Start) - new Date(b.Ao_Time_Start))
+
+        // 數據列
         data.forEach(item => {
-            worksheet.addRow(item)
+            const weekNumber = getWeekNumberForDate(item.Ao_Time_Start)
+            worksheet.addRow({
+                ...item,
+                Schedule: '',
+                Strip_No: parseInt(item.Strip_No),
+                Pass_Rate: item.Pass_Rate ? item.Pass_Rate / 100 : 0,
+                Overkill_Rate: item.Overkill_Rate ? item.Overkill_Rate / 100 : 0,
+                Week_Number: weekNumber
+            })
         })
 
-        // 設置格式
+        // 標題列格式設置
+        worksheet.getRow(1).alignment = { horizontal: 'center' }
         worksheet.getRow(1).font = { bold: true }
+
+        // 數據列格式設置
         worksheet.eachRow((row, rowNumber) => {
             row.eachCell((cell, colNumber) => {
                 cell.border = {
@@ -212,6 +228,19 @@ const ChartContent = () => {
                 }
             })
         })
+
+        // 自適應欄寬
+        worksheet.columns.forEach(column => {
+            let maxLength = 0;
+            column.eachCell({ includeEmpty: true }, cell => {
+                const columnLength = cell.value ? cell.value.toString().length : 10;
+                if (columnLength > maxLength) {
+                    maxLength = columnLength;
+                }
+            });
+            // 確保欄位寬度不會小於10，並添加一些緩衝空間
+            column.width = Math.max(maxLength + 2, 10);
+        });
 
         // 保存文件
         workbook.xlsx.writeBuffer().then(buffer => {
