@@ -146,8 +146,18 @@ const ChartContent = () => {
     // 匯出查詢資料
     const handleExport = async () => {
         const exportExcel = await exportdataByCondition(selectedBD, selectedMachine)
-        exportToExcel(exportExcel, '3rdaoidata_(Security C)')
+        let fileName = '3rdAoiData_(Security C)'; // 預設檔名
+        if (selectedBD && selectedMachine) {
+            fileName = `${selectedBD}_${selectedMachine}_${fileName}`;
+        } else if (selectedBD) {
+            fileName = `${selectedBD}_${fileName}`;
+        } else if (selectedMachine) {
+            fileName = `${selectedMachine}_${fileName}`;
+        }
+
+        exportToExcel(exportExcel, fileName);
     }
+
     // 處理並整合各週期資料
     const processData = (searchData) => {
         const threeMonthsData = filterDataByMonthRange(searchData, 3) //三月
@@ -169,7 +179,7 @@ const ChartContent = () => {
         // 設置列標題
         worksheet.columns = [
             { header: '日期', key: 'Ao_Time_Start', width: 20 },
-            { header: 'Schedule', key: 'Device_Id', width: 30 },
+            { header: 'Device Id', key: 'Device_Id', width: 30 },
             { header: '條號', key: 'Strip_No', width: 10 },
             { header: 'Fail Ppm', key: 'Fail_Ppm', width: 10 },
             { header: 'Pass Rate(%)', key: 'Pass_Rate', width: 15 },
