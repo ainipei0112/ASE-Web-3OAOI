@@ -103,7 +103,7 @@ const reducer = (state, action) => {
 }
 
 const ChartContent = () => {
-    const { aoiData, searchByCondition, exportdataByCondition } = useContext(AppContext)
+    const { aoiData, searchByCondition, numberOfStripByCondition, exportDataByCondition } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
     const {
         updatedTableData,
@@ -145,7 +145,7 @@ const ChartContent = () => {
 
     // 匯出查詢資料
     const handleExport = async () => {
-        const exportExcel = await exportdataByCondition(selectedBD, selectedMachine)
+        const exportExcel = await exportDataByCondition(selectedBD, selectedMachine)
         let fileName = '3rdAoiData_(Security C)'; // 預設檔名
         if (selectedBD && selectedMachine) {
             fileName = `${selectedBD}_${selectedMachine}_${fileName}`;
@@ -179,7 +179,7 @@ const ChartContent = () => {
         // 標題列
         worksheet.columns = [
             { header: '日期', key: 'Ao_Time_Start' },
-            { header: 'Schedule', key: 'Schedule' },
+            { header: 'Schedule', key: 'Lot_No' },
             { header: '條號', key: 'Strip_No', style: { numFmt: '0' } },
             { header: 'Fail Ppm', key: 'Fail_Ppm', style: { numFmt: '0' } },
             { header: 'Pass Rate(%)', key: 'Pass_Rate', style: { numFmt: '0.0%' } },
@@ -198,7 +198,6 @@ const ChartContent = () => {
             const weekNumber = getWeekNumberForDate(item.Ao_Time_Start)
             worksheet.addRow({
                 ...item,
-                Schedule: '',
                 Strip_No: parseInt(item.Strip_No),
                 Pass_Rate: item.Pass_Rate ? item.Pass_Rate / 100 : 0,
                 Overkill_Rate: item.Overkill_Rate ? item.Overkill_Rate / 100 : 0,
