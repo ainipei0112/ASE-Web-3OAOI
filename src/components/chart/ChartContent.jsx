@@ -72,8 +72,10 @@ const initialState = {
     selectedBD: null,
     selectedMachine: null,
     isExportEnabled: false,
-    showTable: false,
     showChart: false,
+    showTable: false,
+    showStripChart: false,
+    showStripTable: false,
     chartTitle: '',
     combinedData: []
 }
@@ -91,11 +93,15 @@ const reducer = (state, action) => {
         case 'SELECT_MACHINE':
             return { ...state, selectedMachine: action.payload }
         case 'SET_EXPORT_ENABLED':
-            return { ...state, isExportEnabled: action.payload };
-        case 'TOGGLE_SHOW_TABLE':
-            return { ...state, showTable: action.payload }
+            return { ...state, isExportEnabled: action.payload }
         case 'TOGGLE_SHOW_CHART':
             return { ...state, showChart: action.payload }
+        case 'TOGGLE_SHOW_TABLE':
+            return { ...state, showTable: action.payload }
+        case 'TOGGLE_SHOW_STRIP_CHART':
+            return { ...state, showStripChart: action.payload }
+        case 'TOGGLE_SHOW_STRIP_TABLE':
+            return { ...state, showStripTable: action.payload }
         case 'SET_CHART_TITLE':
             return { ...state, chartTitle: action.payload }
         case 'SET_COMBINED_DATA':
@@ -114,8 +120,10 @@ const ChartContent = () => {
         chartType,
         selectedBD,
         selectedMachine,
-        showTable,
         showChart,
+        showTable,
+        showStripChart,
+        showStripTable,
         chartTitle,
         combinedData
     } = state
@@ -134,18 +142,23 @@ const ChartContent = () => {
 
         // 根據圖表類型計算資料
         if (chartType === 'BD圖' || chartType === '機台') {
-            combinedData = averageData(searchData);
-            dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateBdAndMachineTableData(combinedData) });
+            combinedData = averageData(searchData)
+            dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateBdAndMachineTableData(combinedData) })
+            dispatch({ type: 'TOGGLE_SHOW_CHART', payload: true })
+            dispatch({ type: 'TOGGLE_SHOW_TABLE', payload: true })
+            dispatch({ type: 'TOGGLE_SHOW_STRIP_CHART', payload: false })
+            dispatch({ type: 'TOGGLE_SHOW_STRIP_TABLE', payload: false })
         } else {
-            combinedData = sumData(searchData);
-            dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateStripTableData(combinedData) });
+            combinedData = sumData(searchData)
+            dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateStripTableData(combinedData) })
+            dispatch({ type: 'TOGGLE_SHOW_STRIP_CHART', payload: true })
+            dispatch({ type: 'TOGGLE_SHOW_STRIP_TABLE', payload: true })
+            dispatch({ type: 'TOGGLE_SHOW_CHART', payload: false })
+            dispatch({ type: 'TOGGLE_SHOW_TABLE', payload: false })
         }
 
-        dispatch({ type: 'TOGGLE_SHOW_CHART', payload: true })
-        dispatch({ type: 'TOGGLE_SHOW_TABLE', payload: true })
-
         // 啟用匯出按鈕
-        dispatch({ type: 'SET_EXPORT_ENABLED', payload: true });
+        dispatch({ type: 'SET_EXPORT_ENABLED', payload: true })
 
         let newTitle = 'Fail PPM & Pass & Overkill rate By '
         if (chartType === 'BD圖') {
@@ -161,16 +174,16 @@ const ChartContent = () => {
     // 匯出查詢資料
     const handleExport = async () => {
         const exportExcel = await exportDataByCondition(selectedBD, selectedMachine)
-        let fileName = '3rdAoiData_(Security C)'; // 預設檔名
+        let fileName = '3rdAoiData_(Security C)' // 預設檔名
         if (selectedBD && selectedMachine) {
-            fileName = `${selectedBD}_${selectedMachine}_${fileName}`;
+            fileName = `${selectedBD}_${selectedMachine}_${fileName}`
         } else if (selectedBD) {
-            fileName = `${selectedBD}_${fileName}`;
+            fileName = `${selectedBD}_${fileName}`
         } else if (selectedMachine) {
-            fileName = `${selectedMachine}_${fileName}`;
+            fileName = `${selectedMachine}_${fileName}`
         }
 
-        exportToExcel(exportExcel, fileName);
+        exportToExcel(exportExcel, fileName)
     }
 
     // 過濾資料
@@ -260,16 +273,16 @@ const ChartContent = () => {
 
         // 自適應欄寬
         worksheet.columns.forEach(column => {
-            let maxLength = 0;
+            let maxLength = 0
             column.eachCell({ includeEmpty: true }, cell => {
-                const columnLength = cell.value ? cell.value.toString().length : 10;
+                const columnLength = cell.value ? cell.value.toString().length : 10
                 if (columnLength > maxLength) {
-                    maxLength = columnLength;
+                    maxLength = columnLength
                 }
-            });
+            })
             // 確保欄位寬度不會小於10，並添加一些緩衝空間
-            column.width = Math.max(maxLength + 2, 10);
-        });
+            column.width = Math.max(maxLength + 2, 10)
+        })
 
         // 保存文件
         workbook.xlsx.writeBuffer().then(buffer => {
@@ -298,6 +311,7 @@ const ChartContent = () => {
     // 更新BD&機台表格資料
     const updateBdAndMachineTableData = (totals) => {
         const updatedData = [...tableData]
+        console.log(updatedData)
         const values = Object.values(totals)
         updatedData.forEach((row, index) => {
             row.data = values.map((item) => {
@@ -318,22 +332,21 @@ const ChartContent = () => {
 
     // 更新Strip表格資料
     const updateStripTableData = (totals) => {
-        const updatedData = [...tableData]
-        const values = Object.values(totals)
-        updatedData.forEach((row, index) => {
-            row.data = values.map((item) => {
-                switch (index) {
-                    case 0:
-                        return item.averageFailPpm
-                    case 1:
-                        return item.averageOverkillRate
-                    case 2:
-                        return item.averagePassRate
-                    default:
-                        return 0
-                }
+        const updatedData = []
+        const indicators = ['totalAoiDefect', 'totalFailCount', 'totalPassCount']
+        const machines = [...new Set(totals.flatMap(period => Object.keys(period.machine)))].sort()
+
+        machines.forEach(machineId => {
+            indicators.forEach(indicator => {
+                const row = { label: `${machineId}-${indicator}`, data: [] }
+                totals.forEach(period => {
+                    const machineData = period.machine[machineId] || {}
+                    row.data.push(machineData[indicator] || 0)
+                })
+                updatedData.push(row)
             })
         })
+
         return updatedData
     }
 
@@ -352,8 +365,112 @@ const ChartContent = () => {
         return data
     }, [period, combinedData])
 
-    // 圖表參數
-    const options = useMemo(() => {
+    // BD&機台圖表參數
+    const bdAndMachineChartoptions = useMemo(() => {
+        return {
+            // 圖表標題
+            title: null,
+            // 去除 Highcharts.com 字樣
+            credits: {
+                enabled: false,
+            },
+            // 無障礙功能關閉
+            accessibility: {
+                enabled: false,
+            },
+            // 圖例
+            legend: {
+                align: 'center',
+                verticalAlign: 'bottom',
+                backgroundColor:
+                    Highcharts.defaultOptions.legend.backgroundColor || // theme
+                    'rgba(255,255,255,0.25)',
+            },
+            // 橫座標軸
+            xAxis: {
+                categories: filteredData.map(data => data.key.includes('-') ? data.key.substring(5) : data.key),
+                crosshair: true,
+            },
+            // 縱座標軸
+            yAxis: [
+                {
+                    title: {
+                        //座標軸文字
+                        text: '',
+                        style: {
+                            color: Highcharts.getOptions().colors[1],
+                        },
+                    },
+                    labels: {
+                        //座標軸數值
+                        format: '{value}%',
+                        style: {
+                            color: Highcharts.getOptions().colors[1],
+                        },
+                    },
+                    opposite: true,
+                    min: 0,
+                    max: 100,
+                },
+                {
+                    title: {
+                        text: '',
+                        style: {
+                            color: Highcharts.getOptions().colors[0],
+                        },
+                    },
+                    labels: {
+                        format: '{value} ',
+                        style: {
+                            color: Highcharts.getOptions().colors[0],
+                        },
+                    },
+                },
+            ],
+            plotOptions: {
+                column: {
+                    stacking: 'normal',
+                    dataLabels: {
+                        enabled: true,
+                    },
+                },
+                spline: {
+                    dataLabels: {
+                        enabled: true,
+                    },
+                },
+            },
+            series: [
+                {
+                    name: 'Fail PPM',
+                    type: 'column',
+                    yAxis: 1,
+                    data: filteredData.map(data => parseFloat(data.averageFailPpm))
+                },
+                {
+                    name: 'Pass Rate',
+                    type: 'spline',
+                    yAxis: 0,
+                    tooltip: {
+                        valueSuffix: '%',
+                    },
+                    data: filteredData.map(data => parseFloat(data.averagePassRate))
+                },
+                {
+                    name: 'Overkill Rate',
+                    type: 'spline',
+                    yAxis: 0,
+                    tooltip: {
+                        valueSuffix: '%',
+                    },
+                    data: filteredData.map(data => parseFloat(data.averageOverkillRate))
+                }
+            ]
+        }
+    }, [filteredData])
+
+    // Strip圖表參數
+    const stripChartoptions = useMemo(() => {
         return {
             // 圖表標題
             title: null,
@@ -591,10 +708,61 @@ const ChartContent = () => {
                             title={state.chartTitle}
                             sx={{ textAlign: 'center', marginLeft: '100px' }}
                         />
-                        <HighchartsReact highcharts={Highcharts} options={options} />
+                        <HighchartsReact highcharts={Highcharts} options={bdAndMachineChartoptions} />
                     </>
                 )}
                 {showTable && (
+                    <TableContainer>
+                        <Table size="small">
+                            <TableHead>
+                                <TableRow>
+                                    <TableHeaderCell>DATE</TableHeaderCell>
+                                    {combinedData.map((data) => (
+                                        <TableHeaderCell key={data.key}>
+                                            {data.key.includes('-') ? data.key.substring(5) : data.key}
+                                        </TableHeaderCell>
+                                    ))}
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {updatedTableData.map((row, rowIndex) => (
+                                    <TableRow key={rowIndex}>
+                                        <FirstColumnCell>
+                                            {row.label}
+                                        </FirstColumnCell>
+                                        {row.data.map((value, colIndex) => (
+                                            <TableBodyCell key={colIndex}>{value}</TableBodyCell>
+                                        ))}
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                )}
+                {/* {showStripChart && (
+                    <>
+                        <CardHeader
+                            action={
+                                <ToggleButtonGroup
+                                    color='primary'
+                                    value={period}
+                                    exclusive={false}
+                                    onChange={(event, newPeriod) => {
+                                        dispatch({ type: 'SET_PERIOD', payload: newPeriod })
+                                    }}
+                                >
+                                    <ToggleButton value='monthly'>月</ToggleButton>
+                                    <ToggleButton value='weekly'>週</ToggleButton>
+                                    <ToggleButton value='daily'>日</ToggleButton>
+                                </ToggleButtonGroup>
+                            }
+                            title={state.chartTitle}
+                            sx={{ textAlign: 'center', marginLeft: '100px' }}
+                        />
+                        <HighchartsReact highcharts={Highcharts} options={stripChartoptions} />
+                    </>
+                )} */}
+                {showStripTable && (
                     <TableContainer>
                         <Table size="small">
                             <TableHead>
