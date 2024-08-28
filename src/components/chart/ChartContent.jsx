@@ -26,7 +26,7 @@ import HighchartsReact from 'highcharts-react-official'
 import { styled } from '@mui/system'
 import { useContext, useMemo, useReducer } from 'react'
 import { AppContext } from '/src/Context.jsx'
-import { calculateAverages, getWeekNumberForDate, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '/src/Function'
+import { calculateTotals, calculateAverages, getWeekNumberForDate, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '/src/Function'
 
 import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
@@ -103,7 +103,7 @@ const reducer = (state, action) => {
 }
 
 const ChartContent = () => {
-    const { aoiData, searchByCondition, numberOfStripByCondition, exportDataByCondition } = useContext(AppContext)
+    const { aoiData, searchByCondition, exportDataByCondition } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
     const {
         updatedTableData,
@@ -127,8 +127,17 @@ const ChartContent = () => {
     // 提交查詢條件
     const handleQuery = async () => {
         const searchData = await searchByCondition(selectedBD, selectedMachine)
-        const combinedData = processData(searchData)
-        dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateTableData(combinedData) })
+        let combinedData
+
+        // 根據圖表類型計算資料
+        if (chartType === 'BD圖' || chartType === '機台') {
+            combinedData = averageData(searchData);
+            dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateBdAndMachineTableData(combinedData) });
+        } else {
+            combinedData = sumData(searchData);
+            dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateStripTableData(combinedData) });
+        }
+
         dispatch({ type: 'TOGGLE_SHOW_CHART', payload: true })
         dispatch({ type: 'TOGGLE_SHOW_TABLE', payload: true })
 
@@ -158,16 +167,31 @@ const ChartContent = () => {
         exportToExcel(exportExcel, fileName);
     }
 
-    // 處理並整合各週期資料
-    const processData = (searchData) => {
+    // 過濾資料
+    const filterData = (searchData) => {
         const threeMonthsData = filterDataByMonthRange(searchData, 3) //三月
         const fiveWeeksData = filterDataByWeekRange(searchData, 5) //五週
         const sevenDaysData = filterDataByDateRange(searchData, 7) //七日
+        return { threeMonthsData, fiveWeeksData, sevenDaysData }
+    }
 
-        // 計算平均並合併資料
+    // 計算平均並整合各週期資料
+    const averageData = (searchData) => {
+        const { threeMonthsData, fiveWeeksData, sevenDaysData } = filterData(searchData)
+
         const threeMonthsAverage = calculateAverages(threeMonthsData, 'monthly')
         const fiveWeeksAverage = calculateAverages(fiveWeeksData, 'weekly')
         const sevenDaysAverage = calculateAverages(sevenDaysData, 'daily')
+        return threeMonthsAverage.concat(fiveWeeksAverage, sevenDaysAverage)
+    }
+
+    // 計算總值並整合各週期資料
+    const sumData = (searchData) => {
+        const { threeMonthsData, fiveWeeksData, sevenDaysData } = filterData(searchData)
+
+        const threeMonthsAverage = calculateTotals(threeMonthsData, 'monthly')
+        const fiveWeeksAverage = calculateTotals(fiveWeeksData, 'weekly')
+        const sevenDaysAverage = calculateTotals(sevenDaysData, 'daily')
         return threeMonthsAverage.concat(fiveWeeksAverage, sevenDaysAverage)
     }
 
@@ -265,8 +289,29 @@ const ChartContent = () => {
         [aoiData],
     )
 
-    // 更新表格資料
-    const updateTableData = (totals) => {
+    // 更新BD&機台表格資料
+    const updateBdAndMachineTableData = (totals) => {
+        const updatedData = [...tableData]
+        const values = Object.values(totals)
+        updatedData.forEach((row, index) => {
+            row.data = values.map((item) => {
+                switch (index) {
+                    case 0:
+                        return item.averageFailPpm
+                    case 1:
+                        return item.averageOverkillRate
+                    case 2:
+                        return item.averagePassRate
+                    default:
+                        return 0
+                }
+            })
+        })
+        return updatedData
+    }
+
+    // 更新Strip表格資料
+    const updateStripTableData = (totals) => {
         const updatedData = [...tableData]
         const values = Object.values(totals)
         updatedData.forEach((row, index) => {

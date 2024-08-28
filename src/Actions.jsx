@@ -31,10 +31,6 @@ const Actions = () => {
         return await fetcher('http://10.11.33.122:1234/thirdAOI.php', { action: 'getDataByCondition', drawingNo, machineId })
     }
 
-    const numberOfStripByCondition = async (drawingNo, machineId) => {
-        return await fetcher('http://10.11.33.122:1234/thirdAOI.php', { action: 'getStripByCondition', drawingNo, machineId })
-    }
-
     const exportDataByCondition = async (drawingNo, machineId) => {
         return await fetcher('http://10.11.33.122:1234/thirdAOI.php', { action: 'exportDataByCondition', drawingNo, machineId })
     }
@@ -43,7 +39,6 @@ const Actions = () => {
         aoiData,
         searchThirdAoiData,
         searchByCondition,
-        numberOfStripByCondition,
         exportDataByCondition,
     }
 }

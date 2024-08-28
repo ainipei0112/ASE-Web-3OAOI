@@ -56,6 +56,70 @@ function calculateAverages(datas, period = 'daily') {
     return calculatedAverages
 }
 
+// 計算總計值的函數
+function calculateTotals(datas, period = 'daily') {
+    const map = {}
+    const getKey = (date, isWeekly, isMonthly) => {
+        if (isMonthly) {
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+            const monthIndex = parseInt(date.substring(5, 7)) - 1
+            return monthNames[monthIndex]
+        } // 轉換月份簡碼作為key：Aug
+        if (isWeekly) return getWeekNumberForDate(date) // 取得週數作為key：W33
+        return date.substring(0, 10) // 使用日期作為key：2024-08-16
+    }
+
+    // 根據key判別當前資料週期
+    datas.forEach(({ Ao_Time_Start, Aoi_Defect, Fail_Count, Pass_Count, Machine_Id }) => {
+        const key = getKey(Ao_Time_Start, period === 'weekly', period === 'monthly')
+
+        // 初始化map[key]
+        if (!map[key]) {
+            map[key] = {
+                date: new Set(),
+                periodType: period,
+                machine: {}
+            }
+        }
+
+        // 初始化map[key][Machine_Id]如果不存在
+        if (!map[key].machine[Machine_Id]) {
+            map[key].machine[Machine_Id] = {
+                totalAoiDefect: 0,
+                totalFailCount: 0,
+                totalPassCount: 0,
+            }
+        }
+
+        // 更新日期集合
+        const dateToAdd = Ao_Time_Start.substring(0, 10)
+        map[key].date.add(dateToAdd)
+
+        // 累加各機台的指標
+        map[key].machine[Machine_Id].totalAoiDefect += parseFloat(Aoi_Defect)
+        map[key].machine[Machine_Id].totalFailCount += parseFloat(Fail_Count)
+        map[key].machine[Machine_Id].totalPassCount += parseFloat(Pass_Count)
+    })
+
+    // 計算每組資料並輸出
+    const calculatedSums = Object.keys(map).map((key) => {
+        const { date, periodType, machine } = map[key]
+        return { key, periodType, date: Array.from(date), machine }
+    })
+
+    // 排序計算結果
+    calculatedSums.sort((a, b) => {
+        if (period === 'weekly') {
+            return a.key.localeCompare(b.key)
+        } else {
+            return new Date(a.date[0]) - new Date(b.date[0])
+        }
+    })
+
+    return calculatedSums
+}
+
 // 濾出前幾月的資料
 function filterDataByMonthRange(datas, months) {
     const now = new Date()
@@ -122,4 +186,4 @@ function getWeekNumberForDate(dateString) {
     return 'W' + weekNumber
 }
 
-export { calculateAverages, getWeekNumberForDate, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange }
+export { calculateAverages, calculateTotals, getWeekNumberForDate, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange }
