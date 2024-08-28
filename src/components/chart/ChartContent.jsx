@@ -311,7 +311,6 @@ const ChartContent = () => {
     // 更新BD&機台表格資料
     const updateBdAndMachineTableData = (totals) => {
         const updatedData = [...tableData]
-        console.log(updatedData)
         const values = Object.values(totals)
         updatedData.forEach((row, index) => {
             row.data = values.map((item) => {
@@ -333,20 +332,33 @@ const ChartContent = () => {
     // 更新Strip表格資料
     const updateStripTableData = (totals) => {
         const updatedData = []
-        const indicators = ['totalAoiDefect', 'totalFailCount', 'totalPassCount']
+        const indicators = [
+            { key: 'totalAoiDefect', label: 'Aoi缺點' },
+            { key: 'totalFailCount', label: '已扣量' },
+            { key: 'totalPassCount', label: 'Pass' }
+        ]
         const machines = [...new Set(totals.flatMap(period => Object.keys(period.machine)))].sort()
 
         machines.forEach(machineId => {
-            indicators.forEach(indicator => {
-                const row = { label: `${machineId}-${indicator}`, data: [] }
+            // 各指標
+            indicators.forEach(({ key, label }) => {
+                const row = { label: `${machineId}-${label}`, data: [] }
                 totals.forEach(period => {
                     const machineData = period.machine[machineId] || {}
-                    row.data.push(machineData[indicator] || 0)
-                })
-                updatedData.push(row)
+                    row.data.push(machineData[key] || 0)
+                });
+                updatedData.push(row);
             })
-        })
 
+            // 總計
+            const totalRow = { label: machineId, data: [] }
+            totals.forEach(period => {
+                const machineData = period.machine[machineId] || {}
+                const total = indicators.reduce((sum, { key }) => sum + (machineData[key] || 0), 0)
+                totalRow.data.push(total)
+            })
+            updatedData.push(totalRow)
+        })
         return updatedData
     }
 
@@ -471,6 +483,20 @@ const ChartContent = () => {
 
     // Strip圖表參數
     const stripChartoptions = useMemo(() => {
+        const machines = filteredData.length > 0
+            ? [...new Set(filteredData.flatMap(data => Object.keys(data.machine || {})))]
+            : []
+        const series = machines.map(machine => ({
+            name: machine,
+            type: 'column',
+            data: filteredData.map(data => {
+                const machineData = data.machine[machine] || {}
+                return (machineData.totalAoiDefect || 0) +
+                    (machineData.totalFailCount || 0) +
+                    (machineData.totalPassCount || 0)
+            })
+        }))
+
         return {
             // 圖表標題
             title: null,
@@ -486,9 +512,7 @@ const ChartContent = () => {
             legend: {
                 align: 'center',
                 verticalAlign: 'bottom',
-                backgroundColor:
-                    Highcharts.defaultOptions.legend.backgroundColor || // theme
-                    'rgba(255,255,255,0.25)',
+                backgroundColor: Highcharts.defaultOptions.legend.backgroundColor || 'rgba(255,255,255,0.25)',
             },
             // 橫座標軸
             xAxis: {
@@ -496,41 +520,15 @@ const ChartContent = () => {
                 crosshair: true,
             },
             // 縱座標軸
-            yAxis: [
-                {
-                    title: {
-                        //座標軸文字
-                        text: '',
-                        style: {
-                            color: Highcharts.getOptions().colors[1],
-                        },
-                    },
-                    labels: {
-                        //座標軸數值
-                        format: '{value}%',
-                        style: {
-                            color: Highcharts.getOptions().colors[1],
-                        },
-                    },
-                    opposite: true,
-                    min: 0,
-                    max: 100,
+            yAxis: {
+                //座標軸文字
+                title: {
+                    text: '',
                 },
-                {
-                    title: {
-                        text: '',
-                        style: {
-                            color: Highcharts.getOptions().colors[0],
-                        },
-                    },
-                    labels: {
-                        format: '{value} ',
-                        style: {
-                            color: Highcharts.getOptions().colors[0],
-                        },
-                    },
+                style: {
+                    color: Highcharts.getOptions().colors[1],
                 },
-            ],
+            },
             plotOptions: {
                 column: {
                     stacking: 'normal',
@@ -544,32 +542,7 @@ const ChartContent = () => {
                     },
                 },
             },
-            series: [
-                {
-                    name: 'Fail PPM',
-                    type: 'column',
-                    yAxis: 1,
-                    data: filteredData.map(data => parseFloat(data.averageFailPpm))
-                },
-                {
-                    name: 'Pass Rate',
-                    type: 'spline',
-                    yAxis: 0,
-                    tooltip: {
-                        valueSuffix: '%',
-                    },
-                    data: filteredData.map(data => parseFloat(data.averagePassRate))
-                },
-                {
-                    name: 'Overkill Rate',
-                    type: 'spline',
-                    yAxis: 0,
-                    tooltip: {
-                        valueSuffix: '%',
-                    },
-                    data: filteredData.map(data => parseFloat(data.averageOverkillRate))
-                }
-            ]
+            series: series
         }
     }, [filteredData])
 
@@ -739,7 +712,7 @@ const ChartContent = () => {
                         </Table>
                     </TableContainer>
                 )}
-                {/* {showStripChart && (
+                {showStripChart && (
                     <>
                         <CardHeader
                             action={
@@ -761,7 +734,7 @@ const ChartContent = () => {
                         />
                         <HighchartsReact highcharts={Highcharts} options={stripChartoptions} />
                     </>
-                )} */}
+                )}
                 {showStripTable && (
                     <TableContainer>
                         <Table size="small">
