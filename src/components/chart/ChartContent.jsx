@@ -71,6 +71,7 @@ const initialState = {
     chartType: 'BD圖',
     selectedBD: null,
     selectedMachine: null,
+    isExportEnabled: false,
     showTable: false,
     showChart: false,
     chartTitle: '',
@@ -89,6 +90,8 @@ const reducer = (state, action) => {
             return { ...state, selectedBD: action.payload }
         case 'SELECT_MACHINE':
             return { ...state, selectedMachine: action.payload }
+        case 'SET_EXPORT_ENABLED':
+            return { ...state, isExportEnabled: action.payload };
         case 'TOGGLE_SHOW_TABLE':
             return { ...state, showTable: action.payload }
         case 'TOGGLE_SHOW_CHART':
@@ -140,6 +143,9 @@ const ChartContent = () => {
 
         dispatch({ type: 'TOGGLE_SHOW_CHART', payload: true })
         dispatch({ type: 'TOGGLE_SHOW_TABLE', payload: true })
+
+        // 啟用匯出按鈕
+        dispatch({ type: 'SET_EXPORT_ENABLED', payload: true });
 
         let newTitle = 'Fail PPM & Pass & Overkill rate By '
         if (chartType === 'BD圖') {
@@ -559,6 +565,7 @@ const ChartContent = () => {
                         <Button
                             variant='contained'
                             onClick={handleExport}
+                            disabled={!state.isExportEnabled}
                         >
                             Export
                         </Button>
