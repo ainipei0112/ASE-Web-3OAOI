@@ -528,6 +528,9 @@ const ChartContent = () => {
                 style: {
                     color: Highcharts.getOptions().colors[1],
                 },
+                stackLabels: {
+                    enabled: true
+                },
             },
             plotOptions: {
                 column: {
