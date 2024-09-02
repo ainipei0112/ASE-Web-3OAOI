@@ -501,7 +501,7 @@ const ChartContent = () => {
         const machines = filteredData.length > 0
             ? [...new Set(filteredData.flatMap(data => Object.keys(data.machine || {})))]
             : []
-        const series = machines.map(machine => ({
+        const columnSeries = machines.map(machine => ({
             name: machine,
             type: 'column',
             data: filteredData.map(data => {
@@ -511,6 +511,15 @@ const ChartContent = () => {
                     (machineData.totalPassCount || 0)
             })
         }))
+
+        const stripSeries = {
+            name: 'strip',
+            type: 'spline',
+            yAxis: 1,
+            data: filteredData.map(data => {
+                return Object.values(data.machine).reduce((sum, machineData) => sum + (machineData.totalStrip || 0), 0)
+            })
+        }
 
         return {
             // 圖表標題
@@ -535,18 +544,26 @@ const ChartContent = () => {
                 crosshair: true,
             },
             // 縱座標軸
-            yAxis: {
-                //座標軸文字
-                title: {
-                    text: '',
+            yAxis: [
+                {
+                    //座標軸文字
+                    title: {
+                        text: '',
+                    },
+                    style: {
+                        color: Highcharts.getOptions().colors[1],
+                    },
+                    stackLabels: {
+                        enabled: true
+                    },
                 },
-                style: {
-                    color: Highcharts.getOptions().colors[1],
-                },
-                stackLabels: {
-                    enabled: true
-                },
-            },
+                {
+                    title: {
+                        text: '',
+                    },
+                    opposite: true
+                }
+            ],
             plotOptions: {
                 column: {
                     stacking: 'normal',
@@ -560,7 +577,7 @@ const ChartContent = () => {
                     },
                 },
             },
-            series: series
+            series: [...columnSeries, stripSeries]
         }
     }, [filteredData])
 
@@ -730,7 +747,7 @@ const ChartContent = () => {
                         </Table>
                     </TableContainer>
                 )}
-                {/* {showStripChart && (
+                {showStripChart && (
                     <>
                         <CardHeader
                             action={
@@ -752,7 +769,7 @@ const ChartContent = () => {
                         />
                         <HighchartsReact highcharts={Highcharts} options={stripChartoptions} />
                     </>
-                )} */}
+                )}
                 {showStripTable && (
                     <TableContainer>
                         <Table size="small">
