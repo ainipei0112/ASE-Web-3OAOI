@@ -24,7 +24,7 @@ import EditIcon from '@mui/icons-material/Edit'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 import { styled } from '@mui/system'
-import { useContext, useMemo, useReducer } from 'react'
+import { useContext, useMemo, useReducer, Fragment } from 'react'
 import { AppContext } from '/src/Context.jsx'
 import { calculateTotals, calculateAverages, getWeekNumberForDate, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '/src/Function'
 
@@ -77,7 +77,8 @@ const initialState = {
     showStripChart: false,
     showStripTable: false,
     chartTitle: '',
-    combinedData: []
+    combinedData: [],
+    expandedRows: {}
 }
 
 const reducer = (state, action) => {
@@ -106,6 +107,14 @@ const reducer = (state, action) => {
             return { ...state, chartTitle: action.payload }
         case 'SET_COMBINED_DATA':
             return { ...state, combinedData: action.payload }
+        case 'TOGGLE_EXPANDED_ROW':
+            return {
+                ...state,
+                expandedRows: {
+                    ...state.expandedRows,
+                    [action.payload]: !state.expandedRows[action.payload] // 切換行的展開狀態
+                }
+            }
         default:
             return state
     }
@@ -125,7 +134,8 @@ const ChartContent = () => {
         showStripChart,
         showStripTable,
         chartTitle,
-        combinedData
+        combinedData,
+        expandedRows
     } = state
 
     // 監控鍵盤按鍵
@@ -331,7 +341,6 @@ const ChartContent = () => {
 
     // 更新Strip表格資料
     const updateStripTableData = (totals) => {
-        const updatedData = []
         const indicators = [
             { key: 'totalStrip', label: '條數' },
             { key: 'totalAoiDefect', label: 'Aoi缺點' },
@@ -339,30 +348,33 @@ const ChartContent = () => {
             { key: 'totalPassCount', label: 'Pass' }
         ]
 
-        // 根據機台ID排序表格資料
+        const groupedData = {}
         const machines = [...new Set(totals.flatMap(period => Object.keys(period.machine)))].sort()
 
         machines.forEach(machineId => {
-            // 各指標
+            // 各機台數據
+            groupedData[machineId] = {
+                total: { label: machineId, data: [] },
+                details: []
+            }
+
             indicators.forEach(({ key, label }) => {
-                const row = { label: `${machineId}-${label}`, data: [] }
+                const row = { label: `${label}`, data: [] }
                 totals.forEach(period => {
                     const machineData = period.machine[machineId] || {}
                     row.data.push(machineData[key] || 0)
-                });
-                updatedData.push(row);
+                })
+                groupedData[machineId].details.push(row)
             })
 
-            // 總計 (不包括條數)
-            const totalRow = { label: machineId, data: [] }
             totals.forEach(period => {
                 const machineData = period.machine[machineId] || {}
                 const total = indicators.slice(1).reduce((sum, { key }) => sum + (machineData[key] || 0), 0)
-                totalRow.data.push(total)
+                groupedData[machineId].total.data.push(total)
             })
-            updatedData.push(totalRow)
         })
-        return updatedData
+
+        return groupedData
     }
 
     // 更新圖表資料
@@ -746,7 +758,7 @@ const ChartContent = () => {
                         <Table size="small">
                             <TableHead>
                                 <TableRow>
-                                    <TableHeaderCell>DATE</TableHeaderCell>
+                                    <TableHeaderCell>Machine ID</TableHeaderCell>
                                     {combinedData.map((data) => (
                                         <TableHeaderCell key={data.key}>
                                             {data.key.includes('-') ? data.key.substring(5) : data.key}
@@ -755,15 +767,26 @@ const ChartContent = () => {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {updatedTableData.map((row, rowIndex) => (
-                                    <TableRow key={rowIndex}>
-                                        <FirstColumnCell>
-                                            {row.label}
-                                        </FirstColumnCell>
-                                        {row.data.map((value, colIndex) => (
-                                            <TableBodyCell key={colIndex}>{value}</TableBodyCell>
+                                {Object.entries(updatedTableData).map(([machineId, machineData]) => (
+                                    <Fragment key={machineId}>
+                                        <TableRow
+                                            onClick={() => dispatch({ type: 'TOGGLE_EXPANDED_ROW', payload: machineId })} // 使用 dispatch 更新 expandedRows
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <FirstColumnCell>{machineId}</FirstColumnCell>
+                                            {machineData.total.data.map((value, index) => (
+                                                <TableBodyCell key={index}>{value}</TableBodyCell>
+                                            ))}
+                                        </TableRow>
+                                        {expandedRows[machineId] && machineData.details.map((row, rowIndex) => (
+                                            <TableRow key={`${machineId}-${rowIndex}`}>
+                                                <FirstColumnCell>{row.label}</FirstColumnCell>
+                                                {row.data.map((value, colIndex) => (
+                                                    <TableBodyCell key={colIndex}>{value}</TableBodyCell>
+                                                ))}
+                                            </TableRow>
                                         ))}
-                                    </TableRow>
+                                    </Fragment>
                                 ))}
                             </TableBody>
                         </Table>
