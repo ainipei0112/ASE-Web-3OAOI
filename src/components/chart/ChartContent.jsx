@@ -333,10 +333,13 @@ const ChartContent = () => {
     const updateStripTableData = (totals) => {
         const updatedData = []
         const indicators = [
+            { key: 'totalStrip', label: '條數' },
             { key: 'totalAoiDefect', label: 'Aoi缺點' },
             { key: 'totalFailCount', label: '已扣量' },
             { key: 'totalPassCount', label: 'Pass' }
         ]
+
+        // 根據機台ID排序表格資料
         const machines = [...new Set(totals.flatMap(period => Object.keys(period.machine)))].sort()
 
         machines.forEach(machineId => {
@@ -350,11 +353,11 @@ const ChartContent = () => {
                 updatedData.push(row);
             })
 
-            // 總計
+            // 總計 (不包括條數)
             const totalRow = { label: machineId, data: [] }
             totals.forEach(period => {
                 const machineData = period.machine[machineId] || {}
-                const total = indicators.reduce((sum, { key }) => sum + (machineData[key] || 0), 0)
+                const total = indicators.slice(1).reduce((sum, { key }) => sum + (machineData[key] || 0), 0)
                 totalRow.data.push(total)
             })
             updatedData.push(totalRow)
@@ -715,7 +718,7 @@ const ChartContent = () => {
                         </Table>
                     </TableContainer>
                 )}
-                {showStripChart && (
+                {/* {showStripChart && (
                     <>
                         <CardHeader
                             action={
@@ -737,7 +740,7 @@ const ChartContent = () => {
                         />
                         <HighchartsReact highcharts={Highcharts} options={stripChartoptions} />
                     </>
-                )}
+                )} */}
                 {showStripTable && (
                     <TableContainer>
                         <Table size="small">

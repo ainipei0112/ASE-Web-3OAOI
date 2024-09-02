@@ -89,6 +89,7 @@ function calculateTotals(datas, period = 'daily') {
                 totalAoiDefect: 0,
                 totalFailCount: 0,
                 totalPassCount: 0,
+                totalStrip: 0,
             }
         }
 
@@ -100,6 +101,7 @@ function calculateTotals(datas, period = 'daily') {
         map[key].machine[Machine_Id].totalAoiDefect += parseFloat(Aoi_Defect)
         map[key].machine[Machine_Id].totalFailCount += parseFloat(Fail_Count)
         map[key].machine[Machine_Id].totalPassCount += parseFloat(Pass_Count)
+        map[key].machine[Machine_Id].totalStrip += 1
     })
 
     // 計算每組資料並輸出
