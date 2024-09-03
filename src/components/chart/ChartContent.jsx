@@ -66,48 +66,34 @@ const tableData = [
 ]
 
 const initialState = {
-    period: ['monthly', 'weekly', 'daily'],
-    updatedTableData: tableData,
     chartType: 'BD圖',
     selectedBD: null,
     selectedMachine: null,
-    isExportEnabled: false,
-    showChart: false,
-    showTable: false,
-    showStripChart: false,
-    showStripTable: false,
-    chartTitle: '',
     combinedData: [],
+    updatedTableData: tableData,
     expandedRows: {},
     selectedOperationType: '機台',
+    showChart: false,
+    showTable: false,
+    showOperationChart: false,
+    showOperationTable: false,
+    chartTitle: '',
+    period: ['monthly', 'weekly', 'daily'],
+    isExportEnabled: false,
 }
 
 const reducer = (state, action) => {
     switch (action.type) {
-        case 'UPDATE_TABLE_DATA':
-            return { ...state, updatedTableData: action.payload }
-        case 'SET_PERIOD':
-            return { ...state, period: action.payload }
         case 'SET_CHART_TYPE':
             return { ...state, selectedBD: null, selectedMachine: null, chartType: action.payload }
         case 'SELECT_BD':
             return { ...state, selectedBD: action.payload }
         case 'SELECT_MACHINE':
             return { ...state, selectedMachine: action.payload }
-        case 'SET_EXPORT_ENABLED':
-            return { ...state, isExportEnabled: action.payload }
-        case 'TOGGLE_SHOW_CHART':
-            return { ...state, showChart: action.payload }
-        case 'TOGGLE_SHOW_TABLE':
-            return { ...state, showTable: action.payload }
-        case 'TOGGLE_SHOW_STRIP_CHART':
-            return { ...state, showStripChart: action.payload }
-        case 'TOGGLE_SHOW_STRIP_TABLE':
-            return { ...state, showStripTable: action.payload }
-        case 'SET_CHART_TITLE':
-            return { ...state, chartTitle: action.payload }
         case 'SET_COMBINED_DATA':
             return { ...state, combinedData: action.payload }
+        case 'UPDATE_TABLE_DATA':
+            return { ...state, updatedTableData: action.payload }
         case 'TOGGLE_EXPANDED_ROW':
             return {
                 ...state,
@@ -118,6 +104,20 @@ const reducer = (state, action) => {
             }
         case 'SET_SELECTED_OPERATION_TYPE':
             return { ...state, selectedOperationType: action.payload }
+        case 'TOGGLE_SHOW_CHART':
+            return { ...state, showChart: action.payload }
+        case 'TOGGLE_SHOW_TABLE':
+            return { ...state, showTable: action.payload }
+        case 'TOGGLE_SHOW_OPERATION_CHART':
+            return { ...state, showOperationChart: action.payload }
+        case 'TOGGLE_SHOW_OPERATION_TABLE':
+            return { ...state, showOperationTable: action.payload }
+        case 'SET_CHART_TITLE':
+            return { ...state, chartTitle: action.payload }
+        case 'SET_PERIOD':
+            return { ...state, period: action.payload }
+        case 'SET_EXPORT_ENABLED':
+            return { ...state, isExportEnabled: action.payload }
         default:
             return state
     }
@@ -127,18 +127,16 @@ const ChartContent = () => {
     const { aoiData, searchByCondition, exportDataByCondition } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
     const {
-        updatedTableData,
-        period,
         chartType,
         selectedBD,
         selectedMachine,
+        combinedData,
+        updatedTableData,
+        expandedRows,
         showChart,
         showTable,
-        showStripChart,
-        showStripTable,
-        chartTitle,
-        combinedData,
-        expandedRows
+        showOperationTable,
+        period,
     } = state
 
     // 監控鍵盤按鍵
@@ -156,16 +154,16 @@ const ChartContent = () => {
         // 根據圖表類型計算資料
         if (chartType === 'BD圖' || chartType === '機台') {
             combinedData = averageData(searchData)
-            dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateBdAndMachineTableData(combinedData) })
+            dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateGeneralTableData(combinedData) })
             dispatch({ type: 'TOGGLE_SHOW_CHART', payload: true })
             dispatch({ type: 'TOGGLE_SHOW_TABLE', payload: true })
-            dispatch({ type: 'TOGGLE_SHOW_STRIP_CHART', payload: false })
-            dispatch({ type: 'TOGGLE_SHOW_STRIP_TABLE', payload: false })
+            dispatch({ type: 'TOGGLE_SHOW_OPERATION_CHART', payload: false })
+            dispatch({ type: 'TOGGLE_SHOW_OPERATION_TABLE', payload: false })
         } else {
             combinedData = sumData(searchData)
-            dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateStripTableData(combinedData) })
-            dispatch({ type: 'TOGGLE_SHOW_STRIP_CHART', payload: true })
-            dispatch({ type: 'TOGGLE_SHOW_STRIP_TABLE', payload: true })
+            dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateOperationTableData(combinedData) })
+            dispatch({ type: 'TOGGLE_SHOW_OPERATION_CHART', payload: true })
+            dispatch({ type: 'TOGGLE_SHOW_OPERATION_TABLE', payload: true })
             dispatch({ type: 'TOGGLE_SHOW_CHART', payload: false })
             dispatch({ type: 'TOGGLE_SHOW_TABLE', payload: false })
         }
@@ -322,7 +320,7 @@ const ChartContent = () => {
     )
 
     // 更新BD&機台表格資料
-    const updateBdAndMachineTableData = (totals) => {
+    const updateGeneralTableData = (totals) => {
         const updatedData = [...tableData]
         const values = Object.values(totals)
         updatedData.forEach((row, index) => {
@@ -343,7 +341,7 @@ const ChartContent = () => {
     }
 
     // 更新Strip表格資料
-    const updateStripTableData = (totals) => {
+    const updateOperationTableData = (totals) => {
         const indicators = [
             { key: 'totalStrip', label: '條數' },
             { key: 'totalAoiDefect', label: 'Aoi缺點' },
@@ -396,7 +394,7 @@ const ChartContent = () => {
     }, [period, combinedData])
 
     // BD&機台圖表參數
-    const bdAndMachineChartoptions = useMemo(() => {
+    const generalChartoptions = useMemo(() => {
         return {
             // 圖表標題
             title: null,
@@ -500,7 +498,7 @@ const ChartContent = () => {
     }, [filteredData])
 
     // Strip圖表參數
-    const stripChartoptions = useMemo(() => {
+    const operationChartoptions = useMemo(() => {
         const machines = filteredData.length > 0
             ? [...new Set(filteredData.flatMap(data => Object.keys(data.machine || {})))]
             : []
@@ -740,7 +738,7 @@ const ChartContent = () => {
                             title={state.chartTitle}
                             sx={{ textAlign: 'center', marginLeft: '100px' }}
                         />
-                        <HighchartsReact highcharts={Highcharts} options={bdAndMachineChartoptions} />
+                        <HighchartsReact highcharts={Highcharts} options={generalChartoptions} />
                     </>
                 )}
                 {showTable && (
@@ -771,7 +769,7 @@ const ChartContent = () => {
                         </Table>
                     </TableContainer>
                 )}
-                {/* {showStripChart && (
+                {/* {showOperationChart && (
                     <>
                         <CardHeader
                             action={
@@ -791,10 +789,10 @@ const ChartContent = () => {
                             title={state.chartTitle}
                             sx={{ textAlign: 'center', marginLeft: '100px' }}
                         />
-                        <HighchartsReact highcharts={Highcharts} options={stripChartoptions} />
+                        <HighchartsReact highcharts={Highcharts} options={operationChartoptions} />
                     </>
                 )} */}
-                {showStripTable && (
+                {showOperationTable && (
                     <TableContainer>
                         <Table size="small">
                             <TableHead>
