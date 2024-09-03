@@ -319,7 +319,7 @@ const ChartContent = () => {
         [aoiData],
     )
 
-    // 更新BD&機台表格資料
+    // 更新 BD & 機台 表格資料
     const updateGeneralTableData = (totals) => {
         const updatedData = [...tableData]
         const values = Object.values(totals)
@@ -340,7 +340,7 @@ const ChartContent = () => {
         return updatedData
     }
 
-    // 更新Strip表格資料
+    // 更新作業數量表格資料
     const updateOperationTableData = (totals) => {
         const indicators = [
             { key: 'totalStrip', label: '條數' },
@@ -378,8 +378,8 @@ const ChartContent = () => {
         return groupedData
     }
 
-    // 更新圖表資料
-    const filteredData = useMemo(() => {
+    // 更新週期資料
+    const periodData = useMemo(() => {
         let data = []
         if (period.includes('monthly')) {
             data = data.concat(combinedData.filter(d => d.periodType === 'monthly'))
@@ -393,7 +393,7 @@ const ChartContent = () => {
         return data
     }, [period, combinedData])
 
-    // BD&機台圖表參數
+    // BD & 機台 圖表參數
     const generalChartoptions = useMemo(() => {
         return {
             // 圖表標題
@@ -416,7 +416,7 @@ const ChartContent = () => {
             },
             // 橫座標軸
             xAxis: {
-                categories: filteredData.map(data => data.key.includes('-') ? data.key.substring(5) : data.key),
+                categories: periodData.map(data => data.key.includes('-') ? data.key.substring(5) : data.key),
                 crosshair: true,
             },
             // 縱座標軸
@@ -473,7 +473,7 @@ const ChartContent = () => {
                     name: 'Fail PPM',
                     type: 'column',
                     yAxis: 1,
-                    data: filteredData.map(data => parseFloat(data.averageFailPpm))
+                    data: periodData.map(data => parseFloat(data.averageFailPpm))
                 },
                 {
                     name: 'Pass Rate',
@@ -482,7 +482,7 @@ const ChartContent = () => {
                     tooltip: {
                         valueSuffix: '%',
                     },
-                    data: filteredData.map(data => parseFloat(data.averagePassRate))
+                    data: periodData.map(data => parseFloat(data.averagePassRate))
                 },
                 {
                     name: 'Overkill Rate',
@@ -491,21 +491,21 @@ const ChartContent = () => {
                     tooltip: {
                         valueSuffix: '%',
                     },
-                    data: filteredData.map(data => parseFloat(data.averageOverkillRate))
+                    data: periodData.map(data => parseFloat(data.averageOverkillRate))
                 }
             ]
         }
-    }, [filteredData])
+    }, [periodData])
 
-    // Strip圖表參數
+    // 作業數量圖表參數
     const operationChartoptions = useMemo(() => {
-        const machines = filteredData.length > 0
-            ? [...new Set(filteredData.flatMap(data => Object.keys(data.machine || {})))]
+        const machines = periodData.length > 0
+            ? [...new Set(periodData.flatMap(data => Object.keys(data.machine || {})))]
             : []
         const columnSeries = machines.map(machine => ({
             name: machine,
             type: 'column',
-            data: filteredData.map(data => {
+            data: periodData.map(data => {
                 const machineData = data.machine[machine] || {}
                 return (machineData.totalAoiDefect || 0) +
                     (machineData.totalFailCount || 0) +
@@ -517,8 +517,11 @@ const ChartContent = () => {
             name: 'strip',
             type: 'spline',
             yAxis: 1,
-            data: filteredData.map(data => {
-                return Object.values(data.machine).reduce((sum, machineData) => sum + (machineData.totalStrip || 0), 0)
+            data: periodData.map(data => {
+                if (data.machine) {
+                    return Object.values(data.machine).reduce((sum, machineData) => sum + (machineData.totalStrip || 0), 0);
+                }
+                return 0
             })
         }
 
@@ -541,7 +544,7 @@ const ChartContent = () => {
             },
             // 橫座標軸
             xAxis: {
-                categories: filteredData.map(data => data.key.includes('-') ? data.key.substring(5) : data.key),
+                categories: periodData.map(data => data.key.includes('-') ? data.key.substring(5) : data.key),
                 crosshair: true,
             },
             // 縱座標軸
@@ -580,7 +583,7 @@ const ChartContent = () => {
             },
             series: [...columnSeries, stripSeries]
         }
-    }, [filteredData])
+    }, [periodData])
 
     return (
         <>
