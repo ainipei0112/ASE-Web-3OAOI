@@ -78,7 +78,8 @@ const initialState = {
     showStripTable: false,
     chartTitle: '',
     combinedData: [],
-    expandedRows: {}
+    expandedRows: {},
+    selectedOperationType: '機台',
 }
 
 const reducer = (state, action) => {
@@ -115,6 +116,8 @@ const reducer = (state, action) => {
                     [action.payload]: !state.expandedRows[action.payload] // 切換行的展開狀態
                 }
             }
+        case 'SET_SELECTED_OPERATION_TYPE':
+            return { ...state, selectedOperationType: action.payload }
         default:
             return state
     }
@@ -629,6 +632,27 @@ const ChartContent = () => {
                                 label='作業數量'
                             />
                         </RadioGroup>
+                        {chartType === '作業數量' && (
+                            <Box sx={{ display: 'inline-flex', alignItems: 'center' }}>
+                                <span style={{ marginRight: 10 }}>By:</span>
+                                <RadioGroup
+                                    row
+                                    value={state.selectedOperationType}
+                                    onChange={(event) => dispatch({ type: 'SET_SELECTED_OPERATION_TYPE', payload: event.target.value })}
+                                >
+                                    <FormControlLabel
+                                        value='機台'
+                                        control={<Radio sx={{ color: grey[600] }} />}
+                                        label='機台'
+                                    />
+                                    <FormControlLabel
+                                        value='BD'
+                                        control={<Radio sx={{ color: grey[600] }} />}
+                                        label='BD'
+                                    />
+                                </RadioGroup>
+                            </Box>
+                        )}
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
                         {chartType !== '機台' && (
@@ -747,7 +771,7 @@ const ChartContent = () => {
                         </Table>
                     </TableContainer>
                 )}
-                {showStripChart && (
+                {/* {showStripChart && (
                     <>
                         <CardHeader
                             action={
@@ -769,13 +793,13 @@ const ChartContent = () => {
                         />
                         <HighchartsReact highcharts={Highcharts} options={stripChartoptions} />
                     </>
-                )}
+                )} */}
                 {showStripTable && (
                     <TableContainer>
                         <Table size="small">
                             <TableHead>
                                 <TableRow>
-                                    <TableHeaderCell>Machine ID</TableHeaderCell>
+                                    <TableHeaderCell>{state.selectedOperationType === 'BD' ? 'Drawing No' : 'Machine ID'}</TableHeaderCell>
                                     {combinedData.map((data) => (
                                         <TableHeaderCell key={data.key}>
                                             {data.key.includes('-') ? data.key.substring(5) : data.key}
