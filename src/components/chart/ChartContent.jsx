@@ -4,7 +4,6 @@ import {
     Button,
     Card,
     CardHeader,
-    Checkbox,
     FormControlLabel,
     Radio,
     RadioGroup,
@@ -149,18 +148,19 @@ const ChartContent = () => {
     // 提交查詢條件
     const handleQuery = async () => {
         const searchData = await searchByCondition(selectedBD, selectedMachine)
+        const { threeMonthsData, fiveWeeksData, sevenDaysData } = filterData(searchData)
         let combinedData
 
         // 根據圖表類型計算資料
         if (chartType === 'BD圖' || chartType === '機台') {
-            combinedData = averageData(searchData)
+            combinedData = averageData(threeMonthsData, fiveWeeksData, sevenDaysData)
             dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateGeneralTableData(combinedData) })
             dispatch({ type: 'TOGGLE_SHOW_CHART', payload: true })
             dispatch({ type: 'TOGGLE_SHOW_TABLE', payload: true })
             dispatch({ type: 'TOGGLE_SHOW_OPERATION_CHART', payload: false })
             dispatch({ type: 'TOGGLE_SHOW_OPERATION_TABLE', payload: false })
         } else {
-            combinedData = sumData(searchData)
+            combinedData = sumData(threeMonthsData, fiveWeeksData, sevenDaysData)
             dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateOperationTableData(combinedData) })
             dispatch({ type: 'TOGGLE_SHOW_OPERATION_CHART', payload: true })
             dispatch({ type: 'TOGGLE_SHOW_OPERATION_TABLE', payload: true })
@@ -206,9 +206,7 @@ const ChartContent = () => {
     }
 
     // 計算平均並整合各週期資料
-    const averageData = (searchData) => {
-        const { threeMonthsData, fiveWeeksData, sevenDaysData } = filterData(searchData)
-
+    const averageData = (threeMonthsData, fiveWeeksData, sevenDaysData) => {
         const threeMonthsAverage = calculateAverages(threeMonthsData, 'monthly')
         const fiveWeeksAverage = calculateAverages(fiveWeeksData, 'weekly')
         const sevenDaysAverage = calculateAverages(sevenDaysData, 'daily')
@@ -216,13 +214,11 @@ const ChartContent = () => {
     }
 
     // 計算總值並整合各週期資料
-    const sumData = (searchData) => {
-        const { threeMonthsData, fiveWeeksData, sevenDaysData } = filterData(searchData)
-
-        const threeMonthsAverage = calculateTotals(threeMonthsData, 'monthly')
-        const fiveWeeksAverage = calculateTotals(fiveWeeksData, 'weekly')
-        const sevenDaysAverage = calculateTotals(sevenDaysData, 'daily')
-        return threeMonthsAverage.concat(fiveWeeksAverage, sevenDaysAverage)
+    const sumData = (threeMonthsData, fiveWeeksData, sevenDaysData) => {
+        const threeMonthsTotal = calculateTotals(threeMonthsData, 'monthly')
+        const fiveWeeksTotal = calculateTotals(fiveWeeksData, 'weekly')
+        const sevenDaysTotal = calculateTotals(sevenDaysData, 'daily')
+        return threeMonthsTotal.concat(fiveWeeksTotal, sevenDaysTotal)
     }
 
     // 匯出Excel
@@ -302,22 +298,18 @@ const ChartContent = () => {
     }
 
     // BD選單
-    const bdOptions = useMemo(
-        () =>
-            [...new Set(aoiData.map(({ Drawing_No }) => Drawing_No))]
-                .sort()
-                .map((Drawing_No) => ({ title: Drawing_No })),
-        [aoiData],
-    )
+    const bdOptions = useMemo(() => {
+        return [...new Set(aoiData.map(({ Drawing_No }) => Drawing_No))]
+            .sort()
+            .map((Drawing_No) => ({ title: Drawing_No }));
+    }, [aoiData])
 
     // 機台選單
-    const machineOptions = useMemo(
-        () =>
-            [...new Set(aoiData.map(({ Machine_Id }) => Machine_Id))]
-                .sort()
-                .map((Machine_Id) => ({ title: Machine_Id })),
-        [aoiData],
-    )
+    const machineOptions = useMemo(() => {
+        return [...new Set(aoiData.map(({ Machine_Id }) => Machine_Id))]
+            .sort()
+            .map((Machine_Id) => ({ title: Machine_Id }));
+    }, [aoiData])
 
     // 更新 BD & 機台 表格資料
     const updateGeneralTableData = (totals) => {
