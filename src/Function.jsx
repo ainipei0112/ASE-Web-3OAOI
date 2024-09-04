@@ -71,43 +71,52 @@ function calculateTotals(datas, period = 'daily') {
     }
 
     // 根據key判別當前資料週期
-    datas.forEach(({ Ao_Time_Start, Aoi_Defect, Fail_Count, Pass_Count, Machine_Id }) => {
+    datas.forEach(({ Ao_Time_Start, Aoi_Defect, Fail_Count, Pass_Count, Machine_Id, Drawing_No }) => {
         const key = getKey(Ao_Time_Start, period === 'weekly', period === 'monthly')
+        const dateToAdd = Ao_Time_Start.substring(0, 10)
 
         // 初始化map[key]
         if (!map[key]) {
             map[key] = {
                 date: new Set(),
                 periodType: period,
-                machine: {}
+                machine: {},
+                bondingDrawing: {}
             }
         }
 
-        // 初始化map[key][Machine_Id]如果不存在
-        if (!map[key].machine[Machine_Id]) {
-            map[key].machine[Machine_Id] = {
-                totalAoiDefect: 0,
-                totalFailCount: 0,
-                totalPassCount: 0,
-                totalStrip: 0,
+        // 初始化map[key][Drawing_No]和map[key][Machine_Id]如果不存在
+        const initializeEntry = (entry, id) => {
+            if (!entry[id]) {
+                entry[id] = {
+                    totalAoiDefect: 0,
+                    totalFailCount: 0,
+                    totalPassCount: 0,
+                    totalStrip: 0,
+                }
             }
+        }
+
+        // 累加各機台的指標
+        const updateTotals = (entry, Aoi_Defect, Fail_Count, Pass_Count) => {
+            entry.totalAoiDefect += parseFloat(Aoi_Defect)
+            entry.totalFailCount += parseFloat(Fail_Count)
+            entry.totalPassCount += parseFloat(Pass_Count)
+            entry.totalStrip += 1
         }
 
         // 更新日期集合
-        const dateToAdd = Ao_Time_Start.substring(0, 10)
         map[key].date.add(dateToAdd)
-
-        // 累加各機台的指標
-        map[key].machine[Machine_Id].totalAoiDefect += parseFloat(Aoi_Defect)
-        map[key].machine[Machine_Id].totalFailCount += parseFloat(Fail_Count)
-        map[key].machine[Machine_Id].totalPassCount += parseFloat(Pass_Count)
-        map[key].machine[Machine_Id].totalStrip += 1
+        initializeEntry(map[key].bondingDrawing, Drawing_No)
+        initializeEntry(map[key].machine, Machine_Id)
+        updateTotals(map[key].bondingDrawing[Drawing_No], Aoi_Defect, Fail_Count, Pass_Count)
+        updateTotals(map[key].machine[Machine_Id], Aoi_Defect, Fail_Count, Pass_Count)
     })
 
     // 計算每組資料並輸出
     const calculatedSums = Object.keys(map).map((key) => {
-        const { date, periodType, machine } = map[key]
-        return { key, periodType, date: Array.from(date), machine }
+        const { date, periodType, machine, bondingDrawing } = map[key]
+        return { key, periodType, date: Array.from(date), machine, bondingDrawing }
     })
 
     // 排序計算結果
