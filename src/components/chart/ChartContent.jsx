@@ -132,10 +132,14 @@ const ChartContent = () => {
         combinedData,
         updatedTableData,
         expandedRows,
+        selectedOperationType,
         showChart,
         showTable,
+        showOperationChart,
         showOperationTable,
+        chartTitle,
         period,
+        isExportEnabled
     } = state
 
     // 監控鍵盤按鍵
@@ -176,6 +180,9 @@ const ChartContent = () => {
             newTitle += selectedBD || 'ALL'
         } else if (chartType === '機台') {
             newTitle += selectedMachine || 'ALL'
+        } else {
+            newTitle = '作業數量 By '
+            newTitle += selectedOperationType || 'ALL'
         }
 
         dispatch({ type: 'SET_CHART_TITLE', payload: newTitle })
@@ -342,28 +349,28 @@ const ChartContent = () => {
         ]
 
         const groupedData = {}
-        const machines = [...new Set(totals.flatMap(period => Object.keys(period.machine)))].sort()
+        const dataSource = selectedOperationType === '機台' ? 'machine' : 'bondingDrawing'
+        const items = [...new Set(totals.flatMap(period => Object.keys(period[dataSource] || {})))].sort()
 
-        machines.forEach(machineId => {
-            // 各機台數據
-            groupedData[machineId] = {
-                total: { label: machineId, data: [] },
+        items.forEach(itemId => {
+            groupedData[itemId] = {
+                total: { label: itemId, data: [] },
                 details: []
             }
 
             indicators.forEach(({ key, label }) => {
                 const row = { label: `${label}`, data: [] }
                 totals.forEach(period => {
-                    const machineData = period.machine[machineId] || {}
-                    row.data.push(machineData[key] || 0)
+                    const itemData = period[dataSource][itemId] || {}
+                    row.data.push(itemData[key] || 0)
                 })
-                groupedData[machineId].details.push(row)
+                groupedData[itemId].details.push(row)
             })
 
             totals.forEach(period => {
-                const machineData = period.machine[machineId] || {}
-                const total = indicators.slice(1).reduce((sum, { key }) => sum + (machineData[key] || 0), 0)
-                groupedData[machineId].total.data.push(total)
+                const itemData = period[dataSource][itemId] || {}
+                const total = indicators.slice(1).reduce((sum, { key }) => sum + (itemData[key] || 0), 0)
+                groupedData[itemId].total.data.push(total)
             })
         })
 
@@ -630,7 +637,7 @@ const ChartContent = () => {
                                 <span style={{ marginRight: 10 }}>By:</span>
                                 <RadioGroup
                                     row
-                                    value={state.selectedOperationType}
+                                    value={selectedOperationType}
                                     onChange={(event) => dispatch({ type: 'SET_SELECTED_OPERATION_TYPE', payload: event.target.value })}
                                 >
                                     <FormControlLabel
@@ -707,7 +714,7 @@ const ChartContent = () => {
                         <Button
                             variant='contained'
                             onClick={handleExport}
-                            disabled={!state.isExportEnabled}
+                            disabled={!isExportEnabled}
                         >
                             Export
                         </Button>
@@ -730,7 +737,7 @@ const ChartContent = () => {
                                     <ToggleButton value='daily'>日</ToggleButton>
                                 </ToggleButtonGroup>
                             }
-                            title={state.chartTitle}
+                            title={chartTitle}
                             sx={{ textAlign: 'center', marginLeft: '100px' }}
                         />
                         <HighchartsReact highcharts={Highcharts} options={generalChartoptions} />
@@ -764,7 +771,7 @@ const ChartContent = () => {
                         </Table>
                     </TableContainer>
                 )}
-                {/* {showOperationChart && (
+                {showOperationChart && (
                     <>
                         <CardHeader
                             action={
@@ -781,18 +788,18 @@ const ChartContent = () => {
                                     <ToggleButton value='daily'>日</ToggleButton>
                                 </ToggleButtonGroup>
                             }
-                            title={state.chartTitle}
+                            title={chartTitle}
                             sx={{ textAlign: 'center', marginLeft: '100px' }}
                         />
                         <HighchartsReact highcharts={Highcharts} options={operationChartoptions} />
                     </>
-                )} */}
+                )}
                 {showOperationTable && (
                     <TableContainer>
                         <Table size="small">
                             <TableHead>
                                 <TableRow>
-                                    <TableHeaderCell>{state.selectedOperationType === 'BD' ? 'Drawing No' : 'Machine ID'}</TableHeaderCell>
+                                    <TableHeaderCell>項目</TableHeaderCell>
                                     {combinedData.map((data) => (
                                         <TableHeaderCell key={data.key}>
                                             {data.key.includes('-') ? data.key.substring(5) : data.key}
