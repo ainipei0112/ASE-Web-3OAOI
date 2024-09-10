@@ -103,6 +103,8 @@ const reducer = (state, action) => {
             }
         case 'SET_SELECTED_OPERATION_TYPE':
             return { ...state, selectedOperationType: action.payload }
+        case 'SET_CURRENT_OPERATION_TYPE':
+            return { ...state, currentOperationType: action.payload }
         case 'TOGGLE_SHOW_CHART':
             return { ...state, showChart: action.payload }
         case 'TOGGLE_SHOW_TABLE':
@@ -133,6 +135,7 @@ const ChartContent = () => {
         updatedTableData,
         expandedRows,
         selectedOperationType,
+        currentOperationType,
         showChart,
         showTable,
         showOperationChart,
@@ -166,6 +169,7 @@ const ChartContent = () => {
         } else {
             combinedData = sumData(threeMonthsData, fiveWeeksData, sevenDaysData)
             dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateOperationTableData(combinedData) })
+            dispatch({ type: 'SET_CURRENT_OPERATION_TYPE', payload: selectedOperationType })
             dispatch({ type: 'TOGGLE_SHOW_OPERATION_CHART', payload: true })
             dispatch({ type: 'TOGGLE_SHOW_OPERATION_TABLE', payload: true })
             dispatch({ type: 'TOGGLE_SHOW_CHART', payload: false })
@@ -498,17 +502,18 @@ const ChartContent = () => {
 
     // 作業數量圖表參數
     const operationChartoptions = useMemo(() => {
-        const machines = periodData.length > 0
-            ? [...new Set(periodData.flatMap(data => Object.keys(data.machine || {})))]
+        const dataSource = currentOperationType === '機台' ? 'machine' : 'bondingDrawing'
+        const items = periodData.length > 0
+            ? [...new Set(periodData.flatMap(data => Object.keys(data[dataSource] || {})))]
             : []
-        const columnSeries = machines.map(machine => ({
-            name: machine,
+        const columnSeries = items.map(item => ({
+            name: item,
             type: 'column',
             data: periodData.map(data => {
-                const machineData = data.machine[machine] || {}
-                return (machineData.totalAoiDefect || 0) +
-                    (machineData.totalFailCount || 0) +
-                    (machineData.totalPassCount || 0)
+                const itemData = data[dataSource][item] || {}
+                return (itemData.totalAoiDefect || 0) +
+                    (itemData.totalFailCount || 0) +
+                    (itemData.totalPassCount || 0)
             })
         }))
 
@@ -517,12 +522,13 @@ const ChartContent = () => {
             type: 'spline',
             yAxis: 1,
             data: periodData.map(data => {
-                if (data.machine) {
-                    return Object.values(data.machine).reduce((sum, machineData) => sum + (machineData.totalStrip || 0), 0);
+                if (data[dataSource]) {
+                    return Object.values(data[dataSource]).reduce((sum, itemData) => sum + (itemData.totalStrip || 0), 0)
                 }
                 return 0
             })
         }
+
 
         return {
             // 圖表標題
@@ -582,7 +588,7 @@ const ChartContent = () => {
             },
             series: [...columnSeries, stripSeries]
         }
-    }, [periodData])
+    }, [periodData, selectedOperationType])
 
     return (
         <>
