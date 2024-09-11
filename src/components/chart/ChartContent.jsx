@@ -186,7 +186,11 @@ const ChartContent = () => {
             newTitle += selectedMachine || 'ALL'
         } else {
             newTitle = '作業數量 By '
-            newTitle += selectedOperationType || 'ALL'
+            if (selectedOperationType === '機台') {
+                newTitle += selectedMachine || '機台'
+            } else {
+                newTitle += selectedBD || 'BD'
+            }
         }
 
         dispatch({ type: 'SET_CHART_TITLE', payload: newTitle })
@@ -588,7 +592,7 @@ const ChartContent = () => {
             },
             series: [...columnSeries, stripSeries]
         }
-    }, [periodData, selectedOperationType])
+    }, [periodData, currentOperationType])
 
     return (
         <>
