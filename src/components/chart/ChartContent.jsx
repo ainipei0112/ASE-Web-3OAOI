@@ -22,6 +22,10 @@ import BarChartIcon from '@mui/icons-material/BarChart'
 import EditIcon from '@mui/icons-material/Edit'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
+import HighchartsExporting from 'highcharts/modules/exporting'
+import HighchartsExportData from 'highcharts/modules/export-data'
+HighchartsExporting(Highcharts)
+HighchartsExportData(Highcharts)
 import { styled } from '@mui/system'
 import { useContext, useMemo, useReducer, Fragment } from 'react'
 import { AppContext } from '/src/Context.jsx'
@@ -544,6 +548,30 @@ const ChartContent = () => {
             // 無障礙功能關閉
             accessibility: {
                 enabled: false,
+            },
+            exporting: {
+                enabled: true,
+                buttons: {
+                    contextButton: {
+                        menuItems: ['downloadPNG', 'downloadJPEG', 'downloadPDF', 'downloadSVG'],
+                        symbol: 'menuball',
+                        symbolStroke: '#666',
+                        symbolFill: '#666',
+                        theme: {
+                            'stroke-width': 1,
+                            stroke: '#666',
+                            r: 8,
+                            states: {
+                                hover: {
+                                    fill: '#000'
+                                },
+                                select: {
+                                    stroke: '#000'
+                                }
+                            }
+                        }
+                    }
+                }
             },
             // 圖例
             legend: {
