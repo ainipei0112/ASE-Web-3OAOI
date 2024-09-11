@@ -417,6 +417,17 @@ const ChartContent = () => {
             accessibility: {
                 enabled: false,
             },
+            // 圖表匯出功能
+            exporting: {
+                enabled: true,
+                buttons: {
+                    contextButton: {
+                        align: 'right',
+                        verticalAlign: 'bottom',
+                        menuItems: ['downloadPNG', 'downloadJPEG', 'downloadPDF', 'downloadSVG']
+                    }
+                }
+            },
             // 圖例
             legend: {
                 align: 'center',
@@ -549,27 +560,14 @@ const ChartContent = () => {
             accessibility: {
                 enabled: false,
             },
+            // 圖表匯出功能
             exporting: {
                 enabled: true,
                 buttons: {
                     contextButton: {
-                        menuItems: ['downloadPNG', 'downloadJPEG', 'downloadPDF', 'downloadSVG'],
-                        symbol: 'menuball',
-                        symbolStroke: '#666',
-                        symbolFill: '#666',
-                        theme: {
-                            'stroke-width': 1,
-                            stroke: '#666',
-                            r: 8,
-                            states: {
-                                hover: {
-                                    fill: '#000'
-                                },
-                                select: {
-                                    stroke: '#000'
-                                }
-                            }
-                        }
+                        align: 'right',
+                        verticalAlign: 'bottom',
+                        menuItems: ['downloadPNG', 'downloadJPEG', 'downloadPDF', 'downloadSVG']
                     }
                 }
             },
