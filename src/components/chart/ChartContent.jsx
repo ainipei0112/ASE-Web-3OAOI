@@ -109,6 +109,10 @@ const reducer = (state, action) => {
             return { ...state, selectedOperationType: action.payload }
         case 'SET_CURRENT_OPERATION_TYPE':
             return { ...state, currentOperationType: action.payload }
+        case 'SET_QUERIED_BD':
+            return { ...state, queriedBD: action.payload }
+        case 'SET_QUERIED_MACHINE':
+            return { ...state, queriedMachine: action.payload }
         case 'TOGGLE_SHOW_CHART':
             return { ...state, showChart: action.payload }
         case 'TOGGLE_SHOW_TABLE':
@@ -140,6 +144,8 @@ const ChartContent = () => {
         expandedRows,
         selectedOperationType,
         currentOperationType,
+        queriedBD,
+        queriedMachine,
         showChart,
         showTable,
         showOperationChart,
@@ -174,6 +180,8 @@ const ChartContent = () => {
             combinedData = sumData(threeMonthsData, fiveWeeksData, sevenDaysData)
             dispatch({ type: 'UPDATE_TABLE_DATA', payload: updateOperationTableData(combinedData) })
             dispatch({ type: 'SET_CURRENT_OPERATION_TYPE', payload: selectedOperationType })
+            dispatch({ type: 'SET_QUERIED_BD', payload: selectedBD })
+            dispatch({ type: 'SET_QUERIED_MACHINE', payload: selectedMachine })
             dispatch({ type: 'TOGGLE_SHOW_OPERATION_CHART', payload: true })
             dispatch({ type: 'TOGGLE_SHOW_OPERATION_TABLE', payload: true })
             dispatch({ type: 'TOGGLE_SHOW_CHART', payload: false })
@@ -522,9 +530,11 @@ const ChartContent = () => {
     // 作業數量圖表參數
     const operationChartoptions = useMemo(() => {
         const dataSource = currentOperationType === '機台' ? 'machine' : 'bondingDrawing'
+
         const items = periodData.length > 0
             ? [...new Set(periodData.flatMap(data => Object.keys(data[dataSource] || {})))]
             : []
+
         const columnSeries = items.map(item => ({
             name: item,
             type: 'column',
@@ -547,7 +557,6 @@ const ChartContent = () => {
                 return 0
             })
         }
-
 
         return {
             // 圖表標題
@@ -593,7 +602,7 @@ const ChartContent = () => {
                         color: Highcharts.getOptions().colors[1],
                     },
                     stackLabels: {
-                        enabled: true
+                        enabled: !((currentOperationType === '機台' && queriedMachine) || (currentOperationType === 'BD' && queriedBD))
                     },
                 },
                 {
@@ -610,15 +619,13 @@ const ChartContent = () => {
                         enabled: true,
                     },
                 },
-                spline: {
-                    dataLabels: {
-                        enabled: true,
-                    },
-                },
+                series: {
+                    stacking: 'normal'
+                }
             },
             series: [...columnSeries, stripSeries]
         }
-    }, [periodData, currentOperationType])
+    }, [periodData, currentOperationType, queriedBD, queriedMachine])
 
     return (
         <>
@@ -677,14 +684,14 @@ const ChartContent = () => {
                                     onChange={(event) => dispatch({ type: 'SET_SELECTED_OPERATION_TYPE', payload: event.target.value })}
                                 >
                                     <FormControlLabel
-                                        value='機台'
-                                        control={<Radio sx={{ color: grey[600] }} />}
-                                        label='機台'
-                                    />
-                                    <FormControlLabel
                                         value='BD'
                                         control={<Radio sx={{ color: grey[600] }} />}
                                         label='BD'
+                                    />
+                                    <FormControlLabel
+                                        value='機台'
+                                        control={<Radio sx={{ color: grey[600] }} />}
+                                        label='機台'
                                     />
                                 </RadioGroup>
                             </Box>
