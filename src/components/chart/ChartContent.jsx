@@ -602,8 +602,17 @@ const ChartContent = () => {
                         color: Highcharts.getOptions().colors[1],
                     },
                     stackLabels: {
-                        enabled: !((currentOperationType === '機台' && queriedMachine) || (currentOperationType === 'BD' && queriedBD))
-                    },
+                        enabled: !((currentOperationType === '機台' && queriedMachine) || (currentOperationType === 'BD' && queriedBD)),
+                        style: {
+                            fontWeight: 'bold',
+                            color: '#C55A11',
+                            textOutline: 'none' // 去掉黑色邊框
+                        },
+                        backgroundColor: '#FFF2CC',
+                        borderWidth: 0,
+                        borderRadius: 5,
+                        padding: 5
+                    }
                 },
                 {
                     title: {
