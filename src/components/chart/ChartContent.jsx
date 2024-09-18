@@ -328,14 +328,14 @@ const ChartContent = () => {
     const bdOptions = useMemo(() => {
         return [...new Set(aoiData.map(({ Drawing_No }) => Drawing_No))]
             .sort()
-            .map((Drawing_No) => ({ title: Drawing_No }));
+            .map((Drawing_No) => ({ title: Drawing_No }))
     }, [aoiData])
 
     // 機台選單
     const machineOptions = useMemo(() => {
         return [...new Set(aoiData.map(({ Machine_Id }) => Machine_Id))]
             .sort()
-            .map((Machine_Id) => ({ title: Machine_Id }));
+            .map((Machine_Id) => ({ title: Machine_Id }))
     }, [aoiData])
 
     // 更新 BD & 機台 表格資料
@@ -416,7 +416,9 @@ const ChartContent = () => {
     const generalChartoptions = useMemo(() => {
         return {
             // 圖表標題
-            title: null,
+            title: {
+                text: null,
+            },
             // 去除 Highcharts.com 字樣
             credits: {
                 enabled: false,
@@ -432,7 +434,18 @@ const ChartContent = () => {
                     contextButton: {
                         align: 'right',
                         verticalAlign: 'bottom',
-                        menuItems: ['downloadPNG', 'downloadJPEG', 'downloadPDF', 'downloadSVG']
+                        menuItems: [
+                            {
+                                text: '匯出圖表',
+                                onclick: function () {
+                                    this.setTitle({ text: chartTitle })
+                                    this.exportChart({
+                                        filename: chartTitle, // 設置檔名為 chartTitle
+                                    })
+                                    this.setTitle({ text: null })
+                                }
+                            }
+                        ]
                     }
                 }
             },
@@ -498,7 +511,7 @@ const ChartContent = () => {
                     dataLabels: {
                         enabled: true,
                         formatter: function () {
-                            return this.y + '%'; // 在數字後加上%
+                            return this.y + '%' // 在數字後加上%
                         },
                     },
                 },
@@ -581,7 +594,18 @@ const ChartContent = () => {
                     contextButton: {
                         align: 'right',
                         verticalAlign: 'bottom',
-                        menuItems: ['downloadPNG', 'downloadJPEG', 'downloadPDF', 'downloadSVG']
+                        menuItems: [
+                            {
+                                text: '匯出圖表',
+                                onclick: function () {
+                                    this.setTitle({ text: chartTitle })
+                                    this.exportChart({
+                                        filename: chartTitle, // 設置檔名為 chartTitle
+                                    })
+                                    this.setTitle({ text: null })
+                                }
+                            }
+                        ]
                     }
                 }
             },
