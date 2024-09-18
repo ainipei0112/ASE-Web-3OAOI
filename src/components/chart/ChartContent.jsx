@@ -30,9 +30,11 @@ import { styled } from '@mui/system'
 import { useContext, useMemo, useReducer, Fragment } from 'react'
 import { AppContext } from '/src/Context.jsx'
 import { calculateTotals, calculateAverages, getWeekNumberForDate, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '/src/Function'
+import MailDialog from './MailDialog';
 
 import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
+import html2canvas from 'html2canvas';
 
 // 定義樣式
 const TableHeaderCell = styled(TableCell)`
@@ -83,6 +85,7 @@ const initialState = {
     chartTitle: '',
     period: ['monthly', 'weekly', 'daily'],
     isExportEnabled: false,
+    isMailDialogOpen: false,
 }
 
 const reducer = (state, action) => {
@@ -127,13 +130,15 @@ const reducer = (state, action) => {
             return { ...state, period: action.payload }
         case 'SET_EXPORT_ENABLED':
             return { ...state, isExportEnabled: action.payload }
+        case 'TOGGLE_MAIL_DIALOG':
+            return { ...state, isMailDialogOpen: action.payload }
         default:
             return state
     }
 }
 
 const ChartContent = () => {
-    const { aoiData, searchByCondition, exportDataByCondition } = useContext(AppContext)
+    const { aoiData, searchByCondition, exportDataByCondition, sendEmail } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
     const {
         chartType,
@@ -152,7 +157,8 @@ const ChartContent = () => {
         showOperationTable,
         chartTitle,
         period,
-        isExportEnabled
+        isExportEnabled,
+        isMailDialogOpen
     } = state
 
     // 監控鍵盤按鍵
@@ -322,6 +328,49 @@ const ChartContent = () => {
         workbook.xlsx.writeBuffer().then(buffer => {
             saveAs(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `${fileName}.xlsx`)
         })
+    }
+
+    const handleMailClick = () => {
+        dispatch({ type: 'TOGGLE_MAIL_DIALOG', payload: true })
+    }
+
+    const handleMailClose = () => {
+        dispatch({ type: 'TOGGLE_MAIL_DIALOG', payload: false })
+    }
+
+    const handleMailSend = async ({ recipient, subject, content, includeChart, includeTable }) => {
+        let chartImage = ''
+        let tableImage = ''
+
+        if (includeChart) {
+            const chartElement = document.querySelector('.highcharts-container')
+            if (chartElement) {
+                const canvas = await html2canvas(chartElement)
+                chartImage = canvas.toDataURL('image/jpeg', 0.9) // 使用JPEG格式，質量為0.9
+            }
+        }
+
+        if (includeTable) {
+            const tableElement = document.querySelector('table')
+            if (tableElement) {
+                const canvas = await html2canvas(tableElement)
+                tableImage = canvas.toDataURL('image/jpeg', 0.9) // 使用JPEG格式，質量為0.9
+            }
+        }
+
+        const emailContent = content
+            .replace('$_chart', includeChart ? `<img src="${chartImage}" alt="Chart">` : '')
+            .replace('$_table', includeTable ? `<img src="${tableImage}" alt="Table">` : '')
+
+        const emailData = {
+            action: 'mailAlert',
+            subject,
+            recipient,
+            content: emailContent,
+        }
+
+        await sendEmail(emailData)
+        dispatch({ type: 'TOGGLE_MAIL_DIALOG', payload: false })
     }
 
     // BD選單
@@ -684,12 +733,6 @@ const ChartContent = () => {
                 </Box>
                 <Box sx={{ padding: '10px' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                        {/* <EditIcon />
-                        <span style={{ padding: 10 }}>Period： </span>
-                        <Checkbox defaultChecked sx={{ color: 'gray' }} /> Daily
-                        <Checkbox sx={{ color: 'gray' }} /> Weekly
-                        <Checkbox sx={{ color: 'gray' }} /> Monthly
-                        <span style={{ padding: 30 }}> </span> */}
                         <EditIcon />
                         <span style={{ padding: 10 }}>圖表類型： </span>
                         <RadioGroup
@@ -794,11 +837,25 @@ const ChartContent = () => {
                         </Button>
                         <Button
                             variant='contained'
+                            sx={{ marginRight: '10px' }}
                             onClick={handleExport}
                             disabled={!isExportEnabled}
                         >
                             Export
                         </Button>
+                        <Button
+                            variant='contained'
+                            onClick={handleMailClick}
+                            disabled={!isExportEnabled}
+                        >
+                            MAIL
+                        </Button>
+                        <MailDialog
+                            open={isMailDialogOpen}
+                            onClose={handleMailClose}
+                            onSend={handleMailSend}
+                            chartTitle={chartTitle}
+                        />
                     </Box>
                 </Box>
                 {showChart && (
