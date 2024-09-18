@@ -490,11 +490,16 @@ const ChartContent = () => {
                     stacking: 'normal',
                     dataLabels: {
                         enabled: true,
+                        verticalAlign: 'top', // 將數字顯示在柱子上方
+                        y: -20, // 把數字的位置向上調整
                     },
                 },
                 spline: {
                     dataLabels: {
                         enabled: true,
+                        formatter: function () {
+                            return this.y + '%'; // 在數字後加上%
+                        },
                     },
                 },
             },
