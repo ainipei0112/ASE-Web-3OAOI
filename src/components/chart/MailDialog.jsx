@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import PropTypes from 'prop-types' // 引入 prop-types
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Checkbox, FormControlLabel } from '@mui/material'
 
 const MailDialog = ({ open, onClose, onSend, chartTitle }) => {
@@ -32,7 +33,6 @@ const MailDialog = ({ open, onClose, onSend, chartTitle }) => {
                     onChange={(e) => setRecipient(e.target.value)}
                 />
                 <TextField
-                    autoFocus
                     margin="dense"
                     label="主旨"
                     InputLabelProps={{
@@ -69,6 +69,14 @@ const MailDialog = ({ open, onClose, onSend, chartTitle }) => {
             </DialogActions>
         </Dialog>
     )
+}
+
+// 添加 propTypes 驗證
+MailDialog.propTypes = {
+    open: PropTypes.bool.isRequired, // 是否開啟對話框
+    onClose: PropTypes.func.isRequired, // 關閉對話框的函數
+    onSend: PropTypes.func.isRequired, // 發送郵件的函數
+    chartTitle: PropTypes.string.isRequired, // 圖表標題
 }
 
 export default MailDialog

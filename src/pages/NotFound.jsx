@@ -15,13 +15,12 @@ const NotFound = () => (
                 justifyContent: 'center',
             }}
         >
-            <Container maxWidth='md'>
-                <Typography align='center' color='textPrimary' variant='h1'>
-                    404: The page you are looking for isn’t here
+            <Container>
+                <Typography align='center' color='textPrimary' variant='h3'>
+                    404：您要查找的頁面不存在
                 </Typography>
-                <Typography align='center' color='textPrimary' variant='subtitle2'>
-                    You either tried some shady route or you came here by mistake. Whichever it is, try using the
-                    navigation
+                <Typography align='center' color='textPrimary' variant='subtitle1'>
+                    您可能嘗試了不尋常的路徑，或誤打誤撞來到這裡。
                 </Typography>
             </Container>
         </Box>

@@ -1,17 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import viteCompression from 'vite-plugin-compression'
 
 export default defineConfig({
     base: './',
     plugins: [
-        react()
+        react(),
+        viteCompression()
     ],
     server: {
-        // port 指定為 3000
-        port: 3000,
-        // https: {
-        //     key: 'C:/Users/K18330/Web/web-3oaoi/cert.key',
-        //     cert: 'C:/Users/K18330/Web/web-3oaoi/cert.crt'
-        // }
+        port: 3000, // port 指定為 3000
     },
 })

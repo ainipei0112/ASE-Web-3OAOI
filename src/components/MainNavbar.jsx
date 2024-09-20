@@ -2,6 +2,7 @@ import { Link as RouterLink } from 'react-router-dom'
 import { AppBar, Toolbar, Typography } from '@mui/material'
 import CottageIcon from '@mui/icons-material/Cottage'
 
+// 導覽列
 const MainNavbar = (props) => (
     <AppBar elevation={0} {...props}>
         <Toolbar sx={{ height: 64 }}>

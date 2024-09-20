@@ -28,13 +28,13 @@ HighchartsExporting(Highcharts)
 HighchartsExportData(Highcharts)
 import { styled } from '@mui/system'
 import { useContext, useMemo, useReducer, Fragment } from 'react'
-import { AppContext } from '/src/Context.jsx'
-import { calculateTotals, calculateAverages, getWeekNumberForDate, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '/src/Function'
-import MailDialog from './MailDialog';
+import { AppContext } from '../../Context.jsx'
+import { calculateTotals, calculateAverages, getWeekNumberForDate, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '../../Function'
+import MailDialog from './MailDialog'
 
 import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas'
 
 // 定義樣式
 const TableHeaderCell = styled(TableCell)`
@@ -294,7 +294,7 @@ const ChartContent = () => {
 
         // 數據列格式設置
         worksheet.eachRow((row, rowNumber) => {
-            row.eachCell((cell, colNumber) => {
+            row.eachCell((cell) => {
                 cell.border = {
                     top: { style: 'thin' },
                     left: { style: 'thin' },
@@ -592,7 +592,7 @@ const ChartContent = () => {
                 }
             ]
         }
-    }, [periodData])
+    }, [periodData, chartTitle])
 
     // 作業數量圖表參數
     const operationChartoptions = useMemo(() => {
@@ -712,7 +712,7 @@ const ChartContent = () => {
             },
             series: [...columnSeries, stripSeries]
         }
-    }, [periodData, currentOperationType, queriedBD, queriedMachine])
+    }, [periodData, currentOperationType, queriedBD, queriedMachine, chartTitle])
 
     return (
         <>
@@ -848,7 +848,7 @@ const ChartContent = () => {
                             onClick={handleMailClick}
                             disabled={!isExportEnabled}
                         >
-                            MAIL
+                            Mail
                         </Button>
                         <MailDialog
                             open={isMailDialogOpen}
