@@ -1,3 +1,7 @@
+// React套件
+import { useContext, useMemo, useReducer, Fragment } from 'react'
+
+// MUI套件
 import {
     Autocomplete,
     Box,
@@ -17,24 +21,26 @@ import {
     ToggleButton,
     ToggleButtonGroup
 } from '@mui/material'
-import { grey } from '@mui/material/colors'
 import BarChartIcon from '@mui/icons-material/BarChart'
 import EditIcon from '@mui/icons-material/Edit'
+import { grey } from '@mui/material/colors'
+import { styled } from '@mui/system'
+
+// 外部套件
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 import HighchartsExporting from 'highcharts/modules/exporting'
 import HighchartsExportData from 'highcharts/modules/export-data'
 HighchartsExporting(Highcharts)
 HighchartsExportData(Highcharts)
-import { styled } from '@mui/system'
-import { useContext, useMemo, useReducer, Fragment } from 'react'
-import { AppContext } from '../../Context.jsx'
-import { calculateTotals, calculateAverages, getWeekNumberForDate, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '../../Function'
-import MailDialog from './MailDialog'
-
 import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
-import html2canvas from 'html2canvas'
+// import html2canvas from 'html2canvas'
+
+// 自定義套件
+import { AppContext } from '../../Context.jsx'
+import { calculateTotals, calculateAverages, getWeekNumberForDate, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '../../Function'
+// import MailDialog from './MailDialog'
 
 // 定義樣式
 const TableHeaderCell = styled(TableCell)`
@@ -138,7 +144,7 @@ const reducer = (state, action) => {
 }
 
 const ChartContent = () => {
-    const { aoiData, searchByCondition, exportDataByCondition, sendEmail } = useContext(AppContext)
+    const { aoiData, searchByCondition, exportDataByCondition } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
     const {
         chartType,
@@ -158,7 +164,7 @@ const ChartContent = () => {
         chartTitle,
         period,
         isExportEnabled,
-        isMailDialogOpen
+        // isMailDialogOpen
     } = state
 
     // 監控鍵盤按鍵
@@ -167,6 +173,22 @@ const ChartContent = () => {
             handleQuery()
         }
     }
+
+    // // 禁用右鍵點擊
+    // const handleContextMenu = (e) => {
+    //     e.preventDefault()
+    // }
+
+    // // 禁止鍵盤開啟開發人員工具
+    // const handleKeyDown = (e) => {
+    //     if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+    //         e.preventDefault()
+    //     }
+    // }
+
+    // // 添加事件監聽器
+    // document.addEventListener('contextmenu', handleContextMenu)
+    // document.addEventListener('keydown', handleKeyDown)
 
     // 提交查詢條件
     const handleQuery = async () => {
@@ -330,48 +352,48 @@ const ChartContent = () => {
         })
     }
 
-    const handleMailClick = () => {
-        dispatch({ type: 'TOGGLE_MAIL_DIALOG', payload: true })
-    }
+    // const handleMailClick = () => {
+    //     dispatch({ type: 'TOGGLE_MAIL_DIALOG', payload: true })
+    // }
 
-    const handleMailClose = () => {
-        dispatch({ type: 'TOGGLE_MAIL_DIALOG', payload: false })
-    }
+    // const handleMailClose = () => {
+    //     dispatch({ type: 'TOGGLE_MAIL_DIALOG', payload: false })
+    // }
 
-    const handleMailSend = async ({ recipient, subject, content, includeChart, includeTable }) => {
-        let chartImage = ''
-        let tableImage = ''
+    // const handleMailSend = async ({ recipient, subject, content, includeChart, includeTable }) => {
+    //     let chartImage = ''
+    //     let tableImage = ''
 
-        if (includeChart) {
-            const chartElement = document.querySelector('.highcharts-container')
-            if (chartElement) {
-                const canvas = await html2canvas(chartElement)
-                chartImage = canvas.toDataURL('image/jpeg', 0.9) // 使用JPEG格式，質量為0.9
-            }
-        }
+    //     if (includeChart) {
+    //         const chartElement = document.querySelector('.highcharts-container')
+    //         if (chartElement) {
+    //             const canvas = await html2canvas(chartElement)
+    //             chartImage = canvas.toDataURL('image/jpeg', 0.9) // 使用JPEG格式，質量為0.9
+    //         }
+    //     }
 
-        if (includeTable) {
-            const tableElement = document.querySelector('table')
-            if (tableElement) {
-                const canvas = await html2canvas(tableElement)
-                tableImage = canvas.toDataURL('image/jpeg', 0.9) // 使用JPEG格式，質量為0.9
-            }
-        }
+    //     if (includeTable) {
+    //         const tableElement = document.querySelector('table')
+    //         if (tableElement) {
+    //             const canvas = await html2canvas(tableElement)
+    //             tableImage = canvas.toDataURL('image/jpeg', 0.9) // 使用JPEG格式，質量為0.9
+    //         }
+    //     }
 
-        const emailContent = content
-            .replace('$_chart', includeChart ? `<img src="${chartImage}" alt="Chart">` : '')
-            .replace('$_table', includeTable ? `<img src="${tableImage}" alt="Table">` : '')
+    //     const emailContent = content
+    //         .replace('$_chart', includeChart ? `<img src="${chartImage}" alt="Chart">` : '')
+    //         .replace('$_table', includeTable ? `<img src="${tableImage}" alt="Table">` : '')
 
-        const emailData = {
-            action: 'mailAlert',
-            subject,
-            recipient,
-            content: emailContent,
-        }
+    //     const emailData = {
+    //         action: 'mailAlert',
+    //         subject,
+    //         recipient,
+    //         content: emailContent,
+    //     }
 
-        await sendEmail(emailData)
-        dispatch({ type: 'TOGGLE_MAIL_DIALOG', payload: false })
-    }
+    //     await sendEmail(emailData)
+    //     dispatch({ type: 'TOGGLE_MAIL_DIALOG', payload: false })
+    // }
 
     // BD選單
     const bdOptions = useMemo(() => {
@@ -485,13 +507,42 @@ const ChartContent = () => {
                         verticalAlign: 'bottom',
                         menuItems: [
                             {
-                                text: '匯出圖表',
+                                text: '匯出 PNG',
                                 onclick: function () {
                                     this.setTitle({ text: chartTitle })
                                     this.exportChart({
-                                        filename: chartTitle, // 設置檔名為 chartTitle
+                                        type: 'image/png',
+                                        filename: chartTitle
                                     })
                                     this.setTitle({ text: null })
+                                }
+                            },
+                            {
+                                text: '匯出 JPG',
+                                onclick: function () {
+                                    this.setTitle({ text: chartTitle })
+                                    this.exportChart({
+                                        type: 'image/jpeg',
+                                        filename: chartTitle
+                                    })
+                                    this.setTitle({ text: null })
+                                }
+                            },
+                            {
+                                text: '匯出 SVG',
+                                onclick: function () {
+                                    this.setTitle({ text: chartTitle })
+                                    this.exportChart({
+                                        type: 'image/svg+xml',
+                                        filename: chartTitle
+                                    })
+                                    this.setTitle({ text: null })
+                                }
+                            },
+                            {
+                                text: '全螢幕顯示',
+                                onclick: function () {
+                                    this.fullscreen.toggle()
                                 }
                             }
                         ]
@@ -645,13 +696,42 @@ const ChartContent = () => {
                         verticalAlign: 'bottom',
                         menuItems: [
                             {
-                                text: '匯出圖表',
+                                text: '匯出 PNG',
                                 onclick: function () {
                                     this.setTitle({ text: chartTitle })
                                     this.exportChart({
-                                        filename: chartTitle, // 設置檔名為 chartTitle
+                                        type: 'image/png',
+                                        filename: chartTitle
                                     })
                                     this.setTitle({ text: null })
+                                }
+                            },
+                            {
+                                text: '匯出 JPG',
+                                onclick: function () {
+                                    this.setTitle({ text: chartTitle })
+                                    this.exportChart({
+                                        type: 'image/jpeg',
+                                        filename: chartTitle
+                                    })
+                                    this.setTitle({ text: null })
+                                }
+                            },
+                            {
+                                text: '匯出 SVG',
+                                onclick: function () {
+                                    this.setTitle({ text: chartTitle })
+                                    this.exportChart({
+                                        type: 'image/svg+xml',
+                                        filename: chartTitle
+                                    })
+                                    this.setTitle({ text: null })
+                                }
+                            },
+                            {
+                                text: '全螢幕顯示',
+                                onclick: function () {
+                                    this.fullscreen.toggle()
                                 }
                             }
                         ]
@@ -843,19 +923,12 @@ const ChartContent = () => {
                         >
                             Export
                         </Button>
-                        <Button
-                            variant='contained'
-                            onClick={handleMailClick}
-                            disabled={!isExportEnabled}
-                        >
-                            Mail
-                        </Button>
-                        <MailDialog
+                        {/* <MailDialog
                             open={isMailDialogOpen}
                             onClose={handleMailClose}
                             onSend={handleMailSend}
                             chartTitle={chartTitle}
-                        />
+                        /> */}
                     </Box>
                 </Box>
                 {showChart && (

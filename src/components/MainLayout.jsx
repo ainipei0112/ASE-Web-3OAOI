@@ -1,7 +1,13 @@
+// React套件
 import { Outlet } from 'react-router-dom'
+
+// MUI套件
 import { styled } from '@mui/system'
+
+// 自定義套件
 import MainNavbar from './MainNavbar'
 
+// 定義樣式
 const MainLayoutRoot = styled('div')(({ theme }) => ({
     backgroundColor: theme.palette.background.paper,
     display: 'flex',
