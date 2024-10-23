@@ -13,6 +13,41 @@ const ChartComponent = ({ data, title, sx }) => {
         credits: { enabled: false },
         exporting: { enabled: false },
         accessibility: { enabled: false },
+        tooltip: {
+            shared: true,
+            crosshairs: true,
+            followPointer: true,
+            headerFormat: '<span style="font-size: 12px">{point.key}</span><br/>',
+            pointFormatter: function () {
+                if (this.series.name === 'Fail PPM') {
+                    return `<span style="color:${this.series.color}">${this.series.name}</span>: <b>${Math.round(this.y)}</b><br/>`
+                }
+                const value = this.y.toFixed(2)
+                const formattedValue = value.endsWith('.00') ? value.slice(0, -3) :
+                    value.endsWith('0') ? value.slice(0, -1) : value
+                return `<span style="color:${this.series.color}">${this.series.name}</span>: <b>${formattedValue}%</b><br/>`
+            }
+        },
+        plotOptions: {
+            series: {
+                dataLabels: {
+                    enabled: true,
+                    style: { fontSize: '10px' }
+                }
+            },
+            column: {
+                dataLabels: {
+                    y: 0,
+                    format: '{y:.0f}'
+                }
+            },
+            spline: {
+                dataLabels: {
+                    y: -10,
+                    format: '{y:.1f}%'
+                }
+            }
+        },
         xAxis: {
             categories: periodData.map(d => d.key),
             crosshair: true
@@ -41,13 +76,13 @@ const ChartComponent = ({ data, title, sx }) => {
                 name: 'Pass Rate',
                 type: 'spline',
                 yAxis: 0,
-                data: periodData.map(d => parseFloat(d.averagePassRate))
+                data: periodData.map(d => Math.max(0, Math.min(100, parseFloat(d.averagePassRate))))
             },
             {
                 name: 'Overkill Rate',
                 type: 'spline',
                 yAxis: 0,
-                data: periodData.map(d => parseFloat(d.averageOverkillRate))
+                data: periodData.map(d => Math.max(0, Math.min(100, parseFloat(d.averageOverkillRate))))
             }
         ]
     })
@@ -85,17 +120,19 @@ const Dashboard = () => {
             try {
                 if (!aoiData || aoiData.length === 0) return
                 setIsLoading(true)
-                const processData = (data, key) => {
-                    const monthlyData = calculateAverages(filterDataByMonthRange(data, 3), 'monthly')
-                    const weeklyData = calculateAverages(filterDataByWeekRange(data, 5), 'weekly')
-                    const dailyData = calculateAverages(filterDataByDateRange(data, 7), 'daily')
-                    return { [key]: { monthly: monthlyData, weekly: weeklyData, daily: dailyData } }
-                }
+                const processData = (data, key) => ({
+                    [key]: {
+                        monthly: calculateAverages(filterDataByMonthRange(data, 3), 'monthly'),
+                        weekly: calculateAverages(filterDataByWeekRange(data, 5), 'weekly'),
+                        daily: calculateAverages(filterDataByDateRange(data, 7), 'daily')
+                    }
+                })
+
                 const updateData = (list, filterKey) =>
-                    list.reduce((acc, item) => {
-                        const filteredData = aoiData.filter(data => data[filterKey] === item)
-                        return { ...acc, ...processData(filteredData, item) }
-                    }, {})
+                    list.reduce((acc, item) => ({
+                        ...acc,
+                        ...processData(aoiData.filter(data => data[filterKey] === item), item)
+                    }), {})
                 const bdResult = updateData(bdList, 'Drawing_No')
                 const machineResult = updateData(machineList, 'Machine_Id')
                 if (mounted) {
