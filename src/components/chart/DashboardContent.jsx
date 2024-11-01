@@ -4,7 +4,7 @@ import { Box, Card, Tab, Tabs, Typography, Grid } from '@mui/material'
 import BarChartIcon from '@mui/icons-material/BarChart'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
-import { calculateAverages, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '../../Function.jsx'
+import { calculateAverages, calculateTotals, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '../../Function.jsx'
 import Loader from '../Loader.jsx'
 
 const ChartComponent = ({ data, title, sx }) => {
@@ -101,6 +101,90 @@ const ChartComponent = ({ data, title, sx }) => {
     )
 }
 
+const OperationChartComponent = ({ data, title, sx }) => {
+    const createOptions = (periodData, periodTitle) => ({
+        title: { text: `${periodTitle} BST 作業數量` },
+        credits: { enabled: false },
+        exporting: { enabled: false },
+        accessibility: { enabled: false },
+        tooltip: {
+            shared: true,
+            crosshairs: true
+        },
+        plotOptions: {
+            column: {
+                dataLabels: {
+                    enabled: true,
+                    style: { fontSize: '10px' }
+                }
+            },
+            spline: {
+                dataLabels: {
+                    enabled: true,
+                    style: { fontSize: '10px' }
+                }
+            }
+        },
+        xAxis: {
+            categories: periodData.map(d => d.key),
+            crosshair: true
+        },
+        yAxis: [
+            {
+                title: { text: '' },
+                labels: { format: '{value}%' }
+            },
+            {
+                title: { text: '' },
+                opposite: true,
+                labels: { format: '{value}' }
+            }
+        ],
+        series: [
+            {
+                name: 'Total Quantity(K)',
+                type: 'column',
+                data: periodData.map(d => {
+                    const machines = d.machine || {}
+                    return Object.values(machines).reduce((sum, machine) => {
+                        return sum + (machine.totalAoiDefect || 0) +
+                            (machine.totalFailCount || 0) +
+                            (machine.totalPassCount || 0)
+                    }, 0)
+                })
+            },
+            {
+                name: 'Strip',
+                type: 'spline',
+                yAxis: 1,
+                data: periodData.map(d => {
+                    const machines = d.machine || {}
+                    return Object.values(machines).reduce((sum, machine) => {
+                        return sum + (machine.totalStrip || 0)
+                    }, 0)
+                })
+            }
+        ]
+    })
+
+    return (
+        <Grid container spacing={2} sx={sx}>
+            {['Daily', 'Weekly', 'Monthly'].map((period) => (
+                <Grid item xs={12} md={4} key={period}>
+                    <HighchartsReact
+                        highcharts={Highcharts}
+                        options={createOptions(data[period.toLowerCase()], period)}
+                    />
+                </Grid>
+            ))}
+        </Grid>
+    )
+}
+
+const renderChart = (data, title) => data && (
+    <ChartComponent data={data} title={title} sx={{ padding: 2 }} />
+)
+
 const Dashboard = () => {
     const { aoiData } = useContext(AppContext)
     const [bdData, setBdData] = useState({})
@@ -156,21 +240,23 @@ const Dashboard = () => {
         monthly: calculateAverages(filterDataByMonthRange(aoiData, 3), 'monthly')
     }), [aoiData])
 
-    const renderChart = (data, title) => data && (
-        <ChartComponent data={data} title={title} sx={{ padding: 2 }} />
-    )
+    const operationData = useMemo(() => ({
+        daily: calculateTotals(filterDataByDateRange(aoiData, 7), 'daily'),
+        weekly: calculateTotals(filterDataByWeekRange(aoiData, 5), 'weekly'),
+        monthly: calculateTotals(filterDataByMonthRange(aoiData, 3), 'monthly')
+    }), [aoiData])
 
     if (isLoading || !chartsReady) return <Loader />
 
     return (
         <Box>
-            <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
+            {/* <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
                 <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d' }}>
                     <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
                     <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Summary</Typography>
                 </Box>
-            </Card>
-            <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
+            </Card> */}
+            {/* <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
                 <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d' }}>
                     <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
                     <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Overall</Typography>
@@ -178,11 +264,14 @@ const Dashboard = () => {
                 <Box>
                     {renderChart(overallData, 'Overall')}
                 </Box>
-            </Card>
+            </Card> */}
             <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
                 <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d' }}>
                     <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
                     <Typography variant="h6" sx={{ fontWeight: 'bold' }}>作業數量</Typography>
+                </Box>
+                <Box>
+                    <OperationChartComponent data={operationData} title="Operation" sx={{ padding: 2 }} />
                 </Box>
             </Card>
             {/* <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
@@ -211,8 +300,8 @@ const Dashboard = () => {
                     </Tabs>
                     {renderChart(bdData[bdList[selectedBdTab]], `${bdList[selectedBdTab]}`)}
                 </Box>
-            </Card>
-            <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+            </Card> */}
+            {/* <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
                 <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d' }}>
                     <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
                     <Typography variant="h6" sx={{ fontWeight: 'bold' }}>By M/C</Typography>
