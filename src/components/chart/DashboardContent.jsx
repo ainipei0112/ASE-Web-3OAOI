@@ -167,10 +167,22 @@ const Dashboard = () => {
             <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
                 <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d' }}>
                     <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Summary</Typography>
+                </Box>
+            </Card>
+            <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
+                <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d' }}>
+                    <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
                     <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Overall</Typography>
                 </Box>
                 <Box>
                     {renderChart(overallData, 'Overall')}
+                </Box>
+            </Card>
+            <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
+                <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d' }}>
+                    <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>作業數量</Typography>
                 </Box>
             </Card>
             {/* <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
