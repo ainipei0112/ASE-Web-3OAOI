@@ -111,7 +111,7 @@ const Dashboard = () => {
     const [chartsReady, setChartsReady] = useState(false)
 
     const getUniqueSortedList = (key) => useMemo(() => [...new Set(aoiData.map(item => item[key]))].sort(), [aoiData])
-    const bdList = getUniqueSortedList('Drawing_No')
+    const bdList = getUniqueSortedList('Device_Id')
     const machineList = getUniqueSortedList('Machine_Id')
 
     useEffect(() => {
@@ -133,7 +133,7 @@ const Dashboard = () => {
                         ...acc,
                         ...processData(aoiData.filter(data => data[filterKey] === item), item)
                     }), {})
-                const bdResult = updateData(bdList, 'Drawing_No')
+                const bdResult = updateData(bdList, 'Device_Id')
                 const machineResult = updateData(machineList, 'Machine_Id')
                 if (mounted) {
                     setBdData(bdResult)
@@ -197,7 +197,7 @@ const Dashboard = () => {
                             <Tab key={bd} label={bd} value={index} />
                         ))}
                     </Tabs>
-                    {renderChart(bdData[bdList[selectedBdTab]], `BD ${bdList[selectedBdTab]}`)}
+                    {renderChart(bdData[bdList[selectedBdTab]], `${bdList[selectedBdTab]}`)}
                 </Box>
             </Card>
             <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
