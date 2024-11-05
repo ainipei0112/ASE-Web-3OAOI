@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo, useContext } from 'react'
 import { AppContext } from '../../Context.jsx'
-import { Box, Card, Tab, Tabs, Typography, Grid } from '@mui/material'
+import { Box, Card, Tab, Tabs, Typography, Grid, FormControlLabel } from '@mui/material'
+import Switch from '@mui/material/Switch'
 import BarChartIcon from '@mui/icons-material/BarChart'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 import { calculateAverages, calculateTotals, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '../../Function.jsx'
 import Loader from '../Loader.jsx'
 
-const ChartComponent = ({ data, title, sx }) => {
+const ChartComponent = ({ data, title, sx, showMonthly = false }) => {
     const createOptions = (periodData, periodTitle) => ({
         title: { text: `${periodTitle} Pass & Overkill rate By ${title}` },
         credits: { enabled: false },
@@ -87,10 +88,13 @@ const ChartComponent = ({ data, title, sx }) => {
         ]
     })
 
+    const periods = showMonthly ? ['Daily', 'Weekly', 'Monthly'] : ['Daily', 'Weekly']
+    const gridSize = showMonthly ? 4 : 6
+
     return (
         <Grid container spacing={2} sx={sx}>
-            {['Daily', 'Weekly', 'Monthly'].map((period, index) => (
-                <Grid item xs={12} md={4} key={period}>
+            {periods.map((period) => (
+                <Grid item xs={12} md={gridSize} key={period}>
                     <HighchartsReact
                         highcharts={Highcharts}
                         options={createOptions(data[period.toLowerCase()], period)}
@@ -101,7 +105,7 @@ const ChartComponent = ({ data, title, sx }) => {
     )
 }
 
-const OperationChartComponent = ({ data, title, sx }) => {
+const OperationChartComponent = ({ data, title, sx, showMonthly = false }) => {
     const createOptions = (periodData, periodTitle) => ({
         title: { text: `${periodTitle} BST 作業數量` },
         credits: { enabled: false },
@@ -132,7 +136,7 @@ const OperationChartComponent = ({ data, title, sx }) => {
         yAxis: [
             {
                 title: { text: '' },
-                labels: { format: '{value}%' }
+                labels: { format: '{value}' }
             },
             {
                 title: { text: '' },
@@ -167,10 +171,13 @@ const OperationChartComponent = ({ data, title, sx }) => {
         ]
     })
 
+    const periods = showMonthly ? ['Daily', 'Weekly', 'Monthly'] : ['Daily', 'Weekly']
+    const gridSize = showMonthly ? 4 : 6
+
     return (
         <Grid container spacing={2} sx={sx}>
-            {['Daily', 'Weekly', 'Monthly'].map((period) => (
-                <Grid item xs={12} md={4} key={period}>
+            {periods.map((period) => (
+                <Grid item xs={12} md={gridSize} key={period}>
                     <HighchartsReact
                         highcharts={Highcharts}
                         options={createOptions(data[period.toLowerCase()], period)}
@@ -181,8 +188,8 @@ const OperationChartComponent = ({ data, title, sx }) => {
     )
 }
 
-const renderChart = (data, title) => data && (
-    <ChartComponent data={data} title={title} sx={{ padding: 2 }} />
+const renderChart = (data, title, showMonthly) => data && (
+    <ChartComponent data={data} title={title} sx={{ padding: 2 }} showMonthly={showMonthly} />
 )
 
 const Dashboard = () => {
@@ -193,6 +200,7 @@ const Dashboard = () => {
     const [selectedMachineTab, setSelectedMachineTab] = useState(0)
     const [isLoading, setIsLoading] = useState(true)
     const [chartsReady, setChartsReady] = useState(false)
+    const [showMonthly, setShowMonthly] = useState(false)
 
     const getUniqueSortedList = (key) => useMemo(() => [...new Set(aoiData.map(item => item[key]))].sort(), [aoiData])
     const bdList = getUniqueSortedList('Device_Id')
@@ -250,34 +258,70 @@ const Dashboard = () => {
 
     return (
         <Box>
-            {/* <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
+            <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
                 <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d' }}>
                     <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
                     <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Summary</Typography>
                 </Box>
-            </Card> */}
-            {/* <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
-                <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d' }}>
-                    <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Overall</Typography>
-                </Box>
-                <Box>
-                    {renderChart(overallData, 'Overall')}
-                </Box>
-            </Card> */}
+            </Card>
             <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
-                <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d' }}>
-                    <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>作業數量</Typography>
+                <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d', justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
+                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Overall</Typography>
+                    </Box>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={showMonthly}
+                                onChange={(e) => setShowMonthly(e.target.checked)}
+                                color="primary"
+                            />
+                        }
+                        label="顯示月報表"
+                    />
                 </Box>
                 <Box>
-                    <OperationChartComponent data={operationData} title="Operation" sx={{ padding: 2 }} />
+                    {renderChart(overallData, 'Overall', showMonthly)}
                 </Box>
             </Card>
-            {/* <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
-                <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d' }}>
-                    <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>By B/D</Typography>
+            <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
+                <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d', justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
+                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>作業數量</Typography>
+                    </Box>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={showMonthly}
+                                onChange={(e) => setShowMonthly(e.target.checked)}
+                                color="primary"
+                            />
+                        }
+                        label="顯示月報表"
+                    />
+                </Box>
+                <Box>
+                    <OperationChartComponent data={operationData} title="Operation" sx={{ padding: 2 }} showMonthly={showMonthly} />
+                </Box>
+            </Card>
+            <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
+                <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d', justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
+                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>By B/D</Typography>
+                    </Box>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={showMonthly}
+                                onChange={(e) => setShowMonthly(e.target.checked)}
+                                color="primary"
+                            />
+                        }
+                        label="顯示月報表"
+                    />
                 </Box>
                 <Box>
                     <Tabs
@@ -298,13 +342,25 @@ const Dashboard = () => {
                             <Tab key={bd} label={bd} value={index} />
                         ))}
                     </Tabs>
-                    {renderChart(bdData[bdList[selectedBdTab]], `${bdList[selectedBdTab]}`)}
+                    {renderChart(bdData[bdList[selectedBdTab]], `${bdList[selectedBdTab]}`, showMonthly)}
                 </Box>
-            </Card> */}
-            {/* <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
-                <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d' }}>
-                    <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>By M/C</Typography>
+            </Card>
+            <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+                <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d', justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
+                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>By M/C</Typography>
+                    </Box>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={showMonthly}
+                                onChange={(e) => setShowMonthly(e.target.checked)}
+                                color="primary"
+                            />
+                        }
+                        label="顯示月報表"
+                    />
                 </Box>
                 <Box>
                     <Tabs
@@ -325,9 +381,9 @@ const Dashboard = () => {
                             <Tab key={machine} label={machine} value={index} />
                         ))}
                     </Tabs>
-                    {renderChart(machineData[machineList[selectedMachineTab]], `機台 ${machineList[selectedMachineTab]}`)}
+                    {renderChart(machineData[machineList[selectedMachineTab]], `機台 ${machineList[selectedMachineTab]}`, showMonthly)}
                 </Box>
-            </Card> */}
+            </Card>
         </Box>
     )
 }
