@@ -2,7 +2,22 @@
 import { useContext, useEffect, useMemo, useReducer } from 'react'
 
 // MUI套件
-import { Box, Card, FormControlLabel, Grid, Switch, Tab, Tabs } from '@mui/material'
+import {
+    Box,
+    Card,
+    FormControlLabel,
+    Grid,
+    Switch,
+    Tab,
+    Tabs,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper
+} from '@mui/material'
 
 // 外部套件
 import Highcharts from 'highcharts'
@@ -36,7 +51,19 @@ const styles = {
                 fontWeight: 'bold'
             }
         }
-    }
+    },
+    tableContainer: {
+        '& .MuiTableCell-root': {
+            padding: '8px 16px',
+        },
+    },
+    tableHeader: {
+        backgroundColor: '#e8f5e9',
+        '& .MuiTableCell-root': {
+            fontWeight: 'bold',
+            color: '#2e7d32',
+        },
+    },
 }
 
 const initialState = {
@@ -112,6 +139,69 @@ const renderChart = (data, title, showMonthly) => data && (
     <ChartComponent data={data} title={title} sx={{ padding: 2 }} showMonthly={showMonthly} />
 )
 
+const SummaryTable = ({ data }) => {
+    const todayData = useMemo(() => {
+        // 取得昨天的日期
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+        const yesterdayString = yesterday.toISOString().split('T')[0]
+
+        // 過濾出昨天的資料
+        return data
+            .filter(item => item.Ao_Time_Start.split(' ')[0] === yesterdayString && parseFloat(item.Overkill_Rate) > 1)
+            .map(item => ({
+                Device_Id: item.Device_Id,
+                Drawing_No: item.Drawing_No,
+                Pass_Rate: item.Pass_Rate,
+                Overkill_Rate: item.Overkill_Rate
+            }))
+    }, [data])
+
+    // 計算平均值
+    const averagePassRate = todayData.reduce((sum, item) => sum + parseFloat(item.Pass_Rate), 0) / todayData.length
+    const averageOverkillRate = todayData.reduce((sum, item) => sum + parseFloat(item.Overkill_Rate), 0) / todayData.length
+
+    return (
+        <TableContainer component={Paper} sx={styles.tableContainer}>
+            <Table stickyHeader size="small">
+                <TableHead>
+                    <TableRow sx={styles.tableHeader}>
+                        <TableCell>BD</TableCell>
+                        <TableCell>Device</TableCell>
+                        <TableCell align="right">Pass Rate (%)</TableCell>
+                        <TableCell align="right">Overkill (%)</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {Object.values(todayData).map((row, index) => (
+                        <TableRow key={index} hover>
+                            <TableCell>{row.Drawing_No}</TableCell>
+                            <TableCell>{row.Device_Id}</TableCell>
+                            <TableCell align="right">{row.Pass_Rate}</TableCell>
+                            <TableCell align="right">{row.Overkill_Rate}</TableCell>
+                        </TableRow>
+                    ))}
+                    {Object.values(todayData).length === 0 && (
+                        <TableRow>
+                            <TableCell colSpan={4} align="center">
+                                No data available for today
+                            </TableCell>
+                        </TableRow>
+                    )}
+                    {/* 加入平均值顯示 */}
+                    {todayData.length > 1 && (
+                        <TableRow>
+                            <TableCell colSpan={2} align="right">總計</TableCell>
+                            <TableCell align="right">{averagePassRate}%</TableCell>
+                            <TableCell align="right">{averageOverkillRate}%</TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
+        </TableContainer>
+    )
+}
+
 const Dashboard = () => {
     const { aoiData } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
@@ -179,7 +269,8 @@ const Dashboard = () => {
         <Box>
             {/* Summary Card */}
             <Card sx={styles.card}>
-                <CardTitle title="Summary" />
+                <CardTitle title="Summary ( 5%太高沒資料 暫時卡1% )" />
+                <SummaryTable data={aoiData} />
             </Card>
 
             {/* Overall Card */}
