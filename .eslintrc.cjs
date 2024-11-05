@@ -40,5 +40,6 @@ module.exports = {
         'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
         semi: ["error", "never"],
         'eqeqeq': ['error', 'always'],
+        'react/prop-types': 'off'
     },
 }

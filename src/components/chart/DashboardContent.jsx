@@ -1,103 +1,87 @@
-import { useState, useEffect, useMemo, useContext } from 'react'
-import { AppContext } from '../../Context.jsx'
-import { Box, Card, Tab, Tabs, Typography, Grid, FormControlLabel } from '@mui/material'
-import Switch from '@mui/material/Switch'
-import BarChartIcon from '@mui/icons-material/BarChart'
+// React套件
+import { useContext, useEffect, useMemo, useReducer } from 'react'
+
+// MUI套件
+import { Box, Card, FormControlLabel, Grid, Switch, Tab, Tabs } from '@mui/material'
+
+// 外部套件
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
+
+// 自定義套件
+import { AppContext } from '../../Context.jsx'
 import { calculateAverages, calculateTotals, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '../../Function.jsx'
 import Loader from '../Loader.jsx'
+import useChartOptions from '../chart/useChartOptions.jsx'
+import CardTitle from '../chart/CardTitle.jsx'
+
+// 樣式定義
+const styles = {
+    card: {
+        border: '1px solid #9AD09C',
+        minHeight: 400,
+        backgroundColor: '#ffffff',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        marginBottom: 3
+    },
+    chartContainer: {
+        padding: 2
+    },
+    tabs: {
+        backgroundColor: '#e8f5e9',
+        '& .MuiTab-root': {
+            color: '#333',
+            '&.Mui-selected': {
+                color: '#2e7d32',
+                fontWeight: 'bold'
+            }
+        }
+    }
+}
+
+const initialState = {
+    bdData: {},
+    machineData: {},
+    selectedBdTab: 0,
+    selectedMachineTab: 0,
+    isLoading: true,
+    chartsReady: false,
+    showMonthly: false
+}
+
+const reducer = (state, action) => {
+    switch (action.type) {
+        case 'SET_BD_DATA':
+            return { ...state, bdData: action.payload }
+        case 'SET_MACHINE_DATA':
+            return { ...state, machineData: action.payload }
+        case 'SET_SELECTED_BD_TAB':
+            return { ...state, selectedBdTab: action.payload }
+        case 'SET_SELECTED_MACHINE_TAB':
+            return { ...state, selectedMachineTab: action.payload }
+        case 'SET_LOADING':
+            return { ...state, isLoading: action.payload }
+        case 'SET_CHARTS_READY':
+            return { ...state, chartsReady: action.payload }
+        case 'SET_SHOW_MONTHLY':
+            return { ...state, showMonthly: action.payload }
+        default:
+            return state
+    }
+}
 
 const ChartComponent = ({ data, title, sx, showMonthly = false }) => {
-    const createOptions = (periodData, periodTitle) => ({
-        title: { text: `${periodTitle} Pass & Overkill rate By ${title}` },
-        credits: { enabled: false },
-        exporting: { enabled: false },
-        accessibility: { enabled: false },
-        tooltip: {
-            shared: true,
-            crosshairs: true,
-            followPointer: true,
-            headerFormat: '<span style="font-size: 12px">{point.key}</span><br/>',
-            pointFormatter: function () {
-                if (this.series.name === 'Fail PPM') {
-                    return `<span style="color:${this.series.color}">${this.series.name}</span>: <b>${Math.round(this.y)}</b><br/>`
-                }
-                const value = this.y.toFixed(2)
-                const formattedValue = value.endsWith('.00') ? value.slice(0, -3) :
-                    value.endsWith('0') ? value.slice(0, -1) : value
-                return `<span style="color:${this.series.color}">${this.series.name}</span>: <b>${formattedValue}%</b><br/>`
-            }
-        },
-        plotOptions: {
-            series: {
-                dataLabels: {
-                    enabled: true,
-                    style: { fontSize: '10px' }
-                }
-            },
-            column: {
-                dataLabels: {
-                    y: 0,
-                    format: '{y:.0f}'
-                }
-            },
-            spline: {
-                dataLabels: {
-                    y: -10,
-                    format: '{y:.1f}%'
-                }
-            }
-        },
-        xAxis: {
-            categories: periodData.map(d => d.key),
-            crosshair: true
-        },
-        yAxis: [
-            {
-                title: { text: '' },
-                labels: { format: '{value}%' },
-                opposite: true,
-                min: 0,
-                max: 100
-            },
-            {
-                title: { text: '' },
-                labels: { format: '{value}' }
-            }
-        ],
-        series: [
-            {
-                name: 'Fail PPM',
-                type: 'column',
-                yAxis: 1,
-                data: periodData.map(d => parseFloat(d.averageFailPpm))
-            },
-            {
-                name: 'Pass Rate',
-                type: 'spline',
-                yAxis: 0,
-                data: periodData.map(d => Math.max(0, Math.min(100, parseFloat(d.averagePassRate))))
-            },
-            {
-                name: 'Overkill Rate',
-                type: 'spline',
-                yAxis: 0,
-                data: periodData.map(d => Math.max(0, Math.min(100, parseFloat(d.averageOverkillRate))))
-            }
-        ]
-    })
-
+    const { createBaseChartOptions } = useChartOptions()
     const periods = showMonthly ? ['Daily', 'Weekly', 'Monthly'] : ['Daily', 'Weekly']
     const gridSize = showMonthly ? 4 : 6
 
     return (
-        <Grid container spacing={2} sx={sx}>
+        <Grid container spacing={2} sx={{ ...styles.chartContainer, ...sx }}>
             {periods.map((period) => (
                 <Grid item xs={12} md={gridSize} key={period}>
                     <HighchartsReact
                         highcharts={Highcharts}
-                        options={createOptions(data[period.toLowerCase()], period)}
+                        options={createBaseChartOptions(data[period.toLowerCase()], period, title)}
                     />
                 </Grid>
             ))}
@@ -106,81 +90,17 @@ const ChartComponent = ({ data, title, sx, showMonthly = false }) => {
 }
 
 const OperationChartComponent = ({ data, title, sx, showMonthly = false }) => {
-    const createOptions = (periodData, periodTitle) => ({
-        title: { text: `${periodTitle} BST 作業數量` },
-        credits: { enabled: false },
-        exporting: { enabled: false },
-        accessibility: { enabled: false },
-        tooltip: {
-            shared: true,
-            crosshairs: true
-        },
-        plotOptions: {
-            column: {
-                dataLabels: {
-                    enabled: true,
-                    style: { fontSize: '10px' }
-                }
-            },
-            spline: {
-                dataLabels: {
-                    enabled: true,
-                    style: { fontSize: '10px' }
-                }
-            }
-        },
-        xAxis: {
-            categories: periodData.map(d => d.key),
-            crosshair: true
-        },
-        yAxis: [
-            {
-                title: { text: '' },
-                labels: { format: '{value}' }
-            },
-            {
-                title: { text: '' },
-                opposite: true,
-                labels: { format: '{value}' }
-            }
-        ],
-        series: [
-            {
-                name: 'Total Quantity(K)',
-                type: 'column',
-                data: periodData.map(d => {
-                    const machines = d.machine || {}
-                    return Object.values(machines).reduce((sum, machine) => {
-                        return sum + (machine.totalAoiDefect || 0) +
-                            (machine.totalFailCount || 0) +
-                            (machine.totalPassCount || 0)
-                    }, 0)
-                })
-            },
-            {
-                name: 'Strip',
-                type: 'spline',
-                yAxis: 1,
-                data: periodData.map(d => {
-                    const machines = d.machine || {}
-                    return Object.values(machines).reduce((sum, machine) => {
-                        return sum + (machine.totalStrip || 0)
-                    }, 0)
-                })
-            }
-        ]
-    })
-
+    const { createOperationChartOptions } = useChartOptions()
     const periods = showMonthly ? ['Daily', 'Weekly', 'Monthly'] : ['Daily', 'Weekly']
     const gridSize = showMonthly ? 4 : 6
 
     return (
-        <Grid container spacing={2} sx={sx}>
+        <Grid container spacing={2} sx={{ ...styles.chartContainer, ...sx }}>
             {periods.map((period) => (
                 <Grid item xs={12} md={gridSize} key={period}>
                     <HighchartsReact
                         highcharts={Highcharts}
-                        options={createOptions(data[period.toLowerCase()], period)}
+                        options={createOperationChartOptions(data[period.toLowerCase()], period, title)}
                     />
                 </Grid>
             ))}
@@ -194,24 +114,21 @@ const renderChart = (data, title, showMonthly) => data && (
 
 const Dashboard = () => {
     const { aoiData } = useContext(AppContext)
-    const [bdData, setBdData] = useState({})
-    const [machineData, setMachineData] = useState({})
-    const [selectedBdTab, setSelectedBdTab] = useState(0)
-    const [selectedMachineTab, setSelectedMachineTab] = useState(0)
-    const [isLoading, setIsLoading] = useState(true)
-    const [chartsReady, setChartsReady] = useState(false)
-    const [showMonthly, setShowMonthly] = useState(false)
+    const [state, dispatch] = useReducer(reducer, initialState)
 
-    const getUniqueSortedList = (key) => useMemo(() => [...new Set(aoiData.map(item => item[key]))].sort(), [aoiData])
-    const bdList = getUniqueSortedList('Device_Id')
-    const machineList = getUniqueSortedList('Machine_Id')
+    const GetUniqueSortedList = (key, data) => useMemo(() =>
+        [...new Set(data.map(item => item[key]))].sort(), [data, key])
+
+    const bdList = GetUniqueSortedList('Device_Id', aoiData)
+    const machineList = GetUniqueSortedList('Machine_Id', aoiData)
 
     useEffect(() => {
         let mounted = true
         const initializeData = async () => {
             try {
                 if (!aoiData || aoiData.length === 0) return
-                setIsLoading(true)
+                dispatch({ type: 'SET_LOADING', payload: true })
+
                 const processData = (data, key) => ({
                     [key]: {
                         monthly: calculateAverages(filterDataByMonthRange(data, 3), 'monthly'),
@@ -225,17 +142,19 @@ const Dashboard = () => {
                         ...acc,
                         ...processData(aoiData.filter(data => data[filterKey] === item), item)
                     }), {})
+
                 const bdResult = updateData(bdList, 'Device_Id')
                 const machineResult = updateData(machineList, 'Machine_Id')
+
                 if (mounted) {
-                    setBdData(bdResult)
-                    setMachineData(machineResult)
-                    setChartsReady(true)
-                    setIsLoading(false)
+                    dispatch({ type: 'SET_BD_DATA', payload: bdResult })
+                    dispatch({ type: 'SET_MACHINE_DATA', payload: machineResult })
+                    dispatch({ type: 'SET_CHARTS_READY', payload: true })
+                    dispatch({ type: 'SET_LOADING', payload: false })
                 }
             } catch (error) {
                 console.error('Error loading chart data:', error)
-                if (mounted) setIsLoading(false)
+                if (mounted) dispatch({ type: 'SET_LOADING', payload: false })
             }
         }
         initializeData()
@@ -254,134 +173,133 @@ const Dashboard = () => {
         monthly: calculateTotals(filterDataByMonthRange(aoiData, 3), 'monthly')
     }), [aoiData])
 
-    if (isLoading || !chartsReady) return <Loader />
+    if (state.isLoading || !state.chartsReady) return <Loader />
 
     return (
         <Box>
-            <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
-                <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d' }}>
-                    <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Summary</Typography>
-                </Box>
+            {/* Summary Card */}
+            <Card sx={styles.card}>
+                <CardTitle title="Summary" />
             </Card>
-            <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
-                <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d', justifyContent: 'space-between' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Overall</Typography>
-                    </Box>
+
+            {/* Overall Card */}
+            <Card sx={styles.card}>
+                <CardTitle title="Overall" >
                     <FormControlLabel
                         control={
                             <Switch
-                                checked={showMonthly}
-                                onChange={(e) => setShowMonthly(e.target.checked)}
+                                checked={state.showMonthly}
+                                onChange={(e) => dispatch({
+                                    type: 'SET_SHOW_MONTHLY',
+                                    payload: e.target.checked
+                                })}
                                 color="primary"
                             />
                         }
                         label="顯示月報表"
                     />
-                </Box>
+                </CardTitle>
                 <Box>
-                    {renderChart(overallData, 'Overall', showMonthly)}
+                    {renderChart(overallData, 'Overall', state.showMonthly)}
                 </Box>
             </Card>
-            <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
-                <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d', justifyContent: 'space-between' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>作業數量</Typography>
-                    </Box>
+
+            {/* Operation Card */}
+            <Card sx={styles.card}>
+                <CardTitle title="作業數量" >
                     <FormControlLabel
                         control={
                             <Switch
-                                checked={showMonthly}
-                                onChange={(e) => setShowMonthly(e.target.checked)}
+                                checked={state.showMonthly}
+                                onChange={(e) => dispatch({
+                                    type: 'SET_SHOW_MONTHLY',
+                                    payload: e.target.checked
+                                })}
                                 color="primary"
                             />
                         }
                         label="顯示月報表"
                     />
-                </Box>
+                </CardTitle>
                 <Box>
-                    <OperationChartComponent data={operationData} title="Operation" sx={{ padding: 2 }} showMonthly={showMonthly} />
+                    <OperationChartComponent
+                        data={operationData}
+                        title="BST 作業數量"
+                        sx={styles.chartContainer}
+                        showMonthly={state.showMonthly}
+                    />
                 </Box>
             </Card>
-            <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginBottom: 3 }}>
-                <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d', justifyContent: 'space-between' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>By B/D</Typography>
-                    </Box>
+
+            {/* B/D Card */}
+            <Card sx={styles.card}>
+                <CardTitle title="By B/D" >
                     <FormControlLabel
                         control={
                             <Switch
-                                checked={showMonthly}
-                                onChange={(e) => setShowMonthly(e.target.checked)}
+                                checked={state.showMonthly}
+                                onChange={(e) => dispatch({
+                                    type: 'SET_SHOW_MONTHLY',
+                                    payload: e.target.checked
+                                })}
                                 color="primary"
                             />
                         }
                         label="顯示月報表"
                     />
-                </Box>
+                </CardTitle>
                 <Box>
                     <Tabs
-                        value={selectedBdTab}
-                        onChange={(e, newValue) => setSelectedBdTab(newValue)}
-                        sx={{
-                            backgroundColor: '#e8f5e9',
-                            '& .MuiTab-root': {
-                                color: '#333',
-                                '&.Mui-selected': {
-                                    color: '#2e7d32',
-                                    fontWeight: 'bold'
-                                }
-                            }
-                        }}
+                        value={state.selectedBdTab}
+                        onChange={(e, newValue) => dispatch({
+                            type: 'SET_SELECTED_BD_TAB',
+                            payload: newValue
+                        })}
+                        sx={styles.tabs}
                     >
                         {bdList.map((bd, index) => (
                             <Tab key={bd} label={bd} value={index} />
                         ))}
                     </Tabs>
-                    {renderChart(bdData[bdList[selectedBdTab]], `${bdList[selectedBdTab]}`, showMonthly)}
+                    {renderChart(state.bdData[bdList[state.selectedBdTab]],
+                        `${bdList[state.selectedBdTab]}`,
+                        state.showMonthly)}
                 </Box>
             </Card>
-            <Card sx={{ border: '1px solid #9AD09C', minHeight: 400, backgroundColor: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
-                <Box sx={{ height: 45, backgroundColor: '#9AD09C', color: '#333', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #7ab17d', justifyContent: 'space-between' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <BarChartIcon sx={{ marginRight: 1, color: '#333' }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>By M/C</Typography>
-                    </Box>
+
+            {/* M/C Card */}
+            <Card sx={styles.card}>
+                <CardTitle title="By M/C" >
                     <FormControlLabel
                         control={
                             <Switch
-                                checked={showMonthly}
-                                onChange={(e) => setShowMonthly(e.target.checked)}
+                                checked={state.showMonthly}
+                                onChange={(e) => dispatch({
+                                    type: 'SET_SHOW_MONTHLY',
+                                    payload: e.target.checked
+                                })}
                                 color="primary"
                             />
                         }
                         label="顯示月報表"
                     />
-                </Box>
+                </CardTitle>
                 <Box>
                     <Tabs
-                        value={selectedMachineTab}
-                        onChange={(e, newValue) => setSelectedMachineTab(newValue)}
-                        sx={{
-                            backgroundColor: '#e8f5e9',
-                            '& .MuiTab-root': {
-                                color: '#333',
-                                '&.Mui-selected': {
-                                    color: '#2e7d32',
-                                    fontWeight: 'bold'
-                                }
-                            }
-                        }}
+                        value={state.selectedMachineTab}
+                        onChange={(e, newValue) => dispatch({
+                            type: 'SET_SELECTED_MACHINE_TAB',
+                            payload: newValue
+                        })}
+                        sx={styles.tabs}
                     >
                         {machineList.map((machine, index) => (
                             <Tab key={machine} label={machine} value={index} />
                         ))}
                     </Tabs>
-                    {renderChart(machineData[machineList[selectedMachineTab]], `機台 ${machineList[selectedMachineTab]}`, showMonthly)}
+                    {renderChart(state.machineData[machineList[state.selectedMachineTab]],
+                        `機台 ${machineList[state.selectedMachineTab]}`,
+                        state.showMonthly)}
                 </Box>
             </Card>
         </Box>
