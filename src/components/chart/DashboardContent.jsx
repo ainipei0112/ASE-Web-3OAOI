@@ -18,6 +18,7 @@ import {
     TableRow,
     Paper
 } from '@mui/material'
+import { styled } from '@mui/system'
 
 // 外部套件
 import Highcharts from 'highcharts'
@@ -31,40 +32,42 @@ import useChartOptions from '../chart/useChartOptions.jsx'
 import CardTitle from '../chart/CardTitle.jsx'
 
 // 樣式定義
-const styles = {
-    card: {
-        border: '1px solid #9AD09C',
-        minHeight: 400,
-        backgroundColor: '#ffffff',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        marginBottom: 3
-    },
-    chartContainer: {
-        padding: 2
-    },
-    tabs: {
-        backgroundColor: '#e8f5e9',
-        '& .MuiTab-root': {
-            color: '#333',
-            '&.Mui-selected': {
-                color: '#2e7d32',
-                fontWeight: 'bold'
-            }
-        }
-    },
-    tableContainer: {
-        '& .MuiTableCell-root': {
-            padding: '8px 16px',
-        },
-    },
-    tableHeader: {
-        backgroundColor: '#e8f5e9',
-        '& .MuiTableCell-root': {
-            fontWeight: 'bold',
+const StyledCard = styled(Card)({
+    border: '1px solid #9AD09C',
+    minHeight: 400,
+    backgroundColor: '#ffffff',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+    marginBottom: 3
+})
+
+const ChartContainer = styled(Grid)({
+    padding: 2
+})
+
+const StyledTabs = styled(Tabs)({
+    backgroundColor: '#e8f5e9',
+    '& .MuiTab-root': {
+        color: '#333',
+        '&.Mui-selected': {
             color: '#2e7d32',
-        },
-    },
-}
+            fontWeight: 'bold'
+        }
+    }
+})
+
+const StyledTableContainer = styled(TableContainer)({
+    '& .MuiTableCell-root': {
+        padding: '8px 16px',
+    }
+})
+
+const TableHeaderRow = styled(TableRow)({
+    backgroundColor: '#e8f5e9',
+    '& .MuiTableCell-root': {
+        fontWeight: 'bold',
+        color: '#2e7d32',
+    }
+})
 
 const initialState = {
     bdData: {},
@@ -103,7 +106,7 @@ const ChartComponent = ({ data, title, sx, showMonthly = false }) => {
     const gridSize = showMonthly ? 4 : 6
 
     return (
-        <Grid container spacing={2} sx={{ ...styles.chartContainer, ...sx }}>
+        <ChartContainer container spacing={2} sx={sx}>
             {periods.map((period) => (
                 <Grid item xs={12} md={gridSize} key={period}>
                     <HighchartsReact
@@ -112,7 +115,7 @@ const ChartComponent = ({ data, title, sx, showMonthly = false }) => {
                     />
                 </Grid>
             ))}
-        </Grid>
+        </ChartContainer>
     )
 }
 
@@ -122,7 +125,7 @@ const OperationChartComponent = ({ data, title, sx, showMonthly = false }) => {
     const gridSize = showMonthly ? 4 : 6
 
     return (
-        <Grid container spacing={2} sx={{ ...styles.chartContainer, ...sx }}>
+        <ChartContainer container spacing={2} sx={sx}>
             {periods.map((period) => (
                 <Grid item xs={12} md={gridSize} key={period}>
                     <HighchartsReact
@@ -131,7 +134,7 @@ const OperationChartComponent = ({ data, title, sx, showMonthly = false }) => {
                     />
                 </Grid>
             ))}
-        </Grid>
+        </ChartContainer>
     )
 }
 
@@ -162,15 +165,15 @@ const SummaryTable = ({ data }) => {
     const averageOverkillRate = todayData.reduce((sum, item) => sum + parseFloat(item.Overkill_Rate), 0) / todayData.length
 
     return (
-        <TableContainer component={Paper} sx={styles.tableContainer}>
+        <StyledTableContainer component={Paper}>
             <Table stickyHeader size="small">
                 <TableHead>
-                    <TableRow sx={styles.tableHeader}>
+                    <TableHeaderRow>
                         <TableCell>BD</TableCell>
                         <TableCell>Device</TableCell>
                         <TableCell align="right">Pass Rate (%)</TableCell>
                         <TableCell align="right">Overkill (%)</TableCell>
-                    </TableRow>
+                    </TableHeaderRow>
                 </TableHead>
                 <TableBody>
                     {Object.values(todayData).map((row, index) => (
@@ -198,7 +201,7 @@ const SummaryTable = ({ data }) => {
                     )}
                 </TableBody>
             </Table>
-        </TableContainer>
+        </StyledTableContainer>
     )
 }
 
@@ -268,13 +271,13 @@ const Dashboard = () => {
     return (
         <Box>
             {/* Summary Card */}
-            <Card sx={styles.card}>
+            <StyledCard>
                 <CardTitle title="Summary ( 5%太高沒資料 暫時卡1% )" />
                 <SummaryTable data={aoiData} />
-            </Card>
+            </StyledCard>
 
             {/* Overall Card */}
-            <Card sx={styles.card}>
+            <StyledCard>
                 <CardTitle title="Overall" >
                     <FormControlLabel
                         control={
@@ -293,10 +296,10 @@ const Dashboard = () => {
                 <Box>
                     {renderChart(overallData, 'Overall', state.showMonthly)}
                 </Box>
-            </Card>
+            </StyledCard>
 
             {/* Operation Card */}
-            <Card sx={styles.card}>
+            <StyledCard>
                 <CardTitle title="作業數量" >
                     <FormControlLabel
                         control={
@@ -316,14 +319,14 @@ const Dashboard = () => {
                     <OperationChartComponent
                         data={operationData}
                         title="BST 作業數量"
-                        sx={styles.chartContainer}
+                        sx={{ padding: 2 }}
                         showMonthly={state.showMonthly}
                     />
                 </Box>
-            </Card>
+            </StyledCard>
 
             {/* B/D Card */}
-            <Card sx={styles.card}>
+            <StyledCard>
                 <CardTitle title="By B/D" >
                     <FormControlLabel
                         control={
@@ -340,26 +343,25 @@ const Dashboard = () => {
                     />
                 </CardTitle>
                 <Box>
-                    <Tabs
+                    <StyledTabs
                         value={state.selectedBdTab}
                         onChange={(e, newValue) => dispatch({
                             type: 'SET_SELECTED_BD_TAB',
                             payload: newValue
                         })}
-                        sx={styles.tabs}
                     >
                         {bdList.map((bd, index) => (
                             <Tab key={bd} label={bd} value={index} />
                         ))}
-                    </Tabs>
+                    </StyledTabs>
                     {renderChart(state.bdData[bdList[state.selectedBdTab]],
                         `${bdList[state.selectedBdTab]}`,
                         state.showMonthly)}
                 </Box>
-            </Card>
+            </StyledCard>
 
             {/* M/C Card */}
-            <Card sx={styles.card}>
+            <StyledCard>
                 <CardTitle title="By M/C" >
                     <FormControlLabel
                         control={
@@ -376,23 +378,22 @@ const Dashboard = () => {
                     />
                 </CardTitle>
                 <Box>
-                    <Tabs
+                    <StyledTabs
                         value={state.selectedMachineTab}
                         onChange={(e, newValue) => dispatch({
                             type: 'SET_SELECTED_MACHINE_TAB',
                             payload: newValue
                         })}
-                        sx={styles.tabs}
                     >
                         {machineList.map((machine, index) => (
                             <Tab key={machine} label={machine} value={index} />
                         ))}
-                    </Tabs>
+                    </StyledTabs>
                     {renderChart(state.machineData[machineList[state.selectedMachineTab]],
                         `機台 ${machineList[state.selectedMachineTab]}`,
                         state.showMonthly)}
                 </Box>
-            </Card>
+            </StyledCard>
         </Box>
     )
 }
