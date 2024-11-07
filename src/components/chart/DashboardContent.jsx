@@ -151,13 +151,14 @@ const SummaryTable = ({ data }) => {
 
         // 過濾出昨天的資料
         return data
-            .filter(item => item.Ao_Time_Start.split(' ')[0] === yesterdayString && parseFloat(item.Overkill_Rate) > 1)
+            .filter(item => item.Ao_Time_Start.split(' ')[0] === yesterdayString)
             .map(item => ({
                 Device_Id: item.Device_Id,
                 Drawing_No: item.Drawing_No,
                 Pass_Rate: item.Pass_Rate,
                 Overkill_Rate: item.Overkill_Rate
             }))
+            .sort((a, b) => b.Overkill_Rate - a.Overkill_Rate)
     }, [data])
 
     // 計算平均值
@@ -177,7 +178,7 @@ const SummaryTable = ({ data }) => {
                 </TableHead>
                 <TableBody>
                     {Object.values(todayData).map((row, index) => (
-                        <TableRow key={index} hover>
+                        <TableRow key={index} style={{ border: parseFloat(row.Overkill_Rate) > 1 ? '2px solid red' : 'inherit', backgroundColor: parseFloat(row.Overkill_Rate) > 1 ? '#ffe6e6' : 'inherit' }}>
                             <TableCell>{row.Drawing_No}</TableCell>
                             <TableCell>{row.Device_Id}</TableCell>
                             <TableCell align="right">{row.Pass_Rate}</TableCell>
@@ -208,6 +209,15 @@ const SummaryTable = ({ data }) => {
 const Dashboard = () => {
     const { aoiData } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
+    const {
+        bdData,
+        machineData,
+        selectedBdTab,
+        selectedMachineTab,
+        isLoading,
+        chartsReady,
+        showMonthly
+    } = state
 
     const GetUniqueSortedList = (key, data) => useMemo(() =>
         [...new Set(data.map(item => item[key]))].sort(), [data, key])
@@ -266,7 +276,7 @@ const Dashboard = () => {
         monthly: calculateTotals(filterDataByMonthRange(aoiData, 3), 'monthly')
     }), [aoiData])
 
-    if (state.isLoading || !state.chartsReady) return <Loader />
+    if (isLoading || !chartsReady) return <Loader />
 
     return (
         <Box>
@@ -282,7 +292,7 @@ const Dashboard = () => {
                     <FormControlLabel
                         control={
                             <Switch
-                                checked={state.showMonthly}
+                                checked={showMonthly}
                                 onChange={(e) => dispatch({
                                     type: 'SET_SHOW_MONTHLY',
                                     payload: e.target.checked
@@ -294,7 +304,7 @@ const Dashboard = () => {
                     />
                 </CardTitle>
                 <Box>
-                    {renderChart(overallData, 'Overall', state.showMonthly)}
+                    {renderChart(overallData, 'Overall', showMonthly)}
                 </Box>
             </StyledCard>
 
@@ -304,7 +314,7 @@ const Dashboard = () => {
                     <FormControlLabel
                         control={
                             <Switch
-                                checked={state.showMonthly}
+                                checked={showMonthly}
                                 onChange={(e) => dispatch({
                                     type: 'SET_SHOW_MONTHLY',
                                     payload: e.target.checked
@@ -320,7 +330,7 @@ const Dashboard = () => {
                         data={operationData}
                         title="BST 作業數量"
                         sx={{ padding: 2 }}
-                        showMonthly={state.showMonthly}
+                        showMonthly={showMonthly}
                     />
                 </Box>
             </StyledCard>
@@ -331,7 +341,7 @@ const Dashboard = () => {
                     <FormControlLabel
                         control={
                             <Switch
-                                checked={state.showMonthly}
+                                checked={showMonthly}
                                 onChange={(e) => dispatch({
                                     type: 'SET_SHOW_MONTHLY',
                                     payload: e.target.checked
@@ -344,7 +354,9 @@ const Dashboard = () => {
                 </CardTitle>
                 <Box>
                     <StyledTabs
-                        value={state.selectedBdTab}
+                        scrollButtons="auto"
+                        variant="scrollable"
+                        value={selectedBdTab}
                         onChange={(e, newValue) => dispatch({
                             type: 'SET_SELECTED_BD_TAB',
                             payload: newValue
@@ -354,9 +366,9 @@ const Dashboard = () => {
                             <Tab key={bd} label={bd} value={index} />
                         ))}
                     </StyledTabs>
-                    {renderChart(state.bdData[bdList[state.selectedBdTab]],
-                        `${bdList[state.selectedBdTab]}`,
-                        state.showMonthly)}
+                    {renderChart(bdData[bdList[selectedBdTab]],
+                        `${bdList[selectedBdTab]}`,
+                        showMonthly)}
                 </Box>
             </StyledCard>
 
@@ -366,7 +378,7 @@ const Dashboard = () => {
                     <FormControlLabel
                         control={
                             <Switch
-                                checked={state.showMonthly}
+                                checked={showMonthly}
                                 onChange={(e) => dispatch({
                                     type: 'SET_SHOW_MONTHLY',
                                     payload: e.target.checked
@@ -379,7 +391,9 @@ const Dashboard = () => {
                 </CardTitle>
                 <Box>
                     <StyledTabs
-                        value={state.selectedMachineTab}
+                        scrollButtons="auto"
+                        variant="scrollable"
+                        value={selectedMachineTab}
                         onChange={(e, newValue) => dispatch({
                             type: 'SET_SELECTED_MACHINE_TAB',
                             payload: newValue
@@ -389,9 +403,9 @@ const Dashboard = () => {
                             <Tab key={machine} label={machine} value={index} />
                         ))}
                     </StyledTabs>
-                    {renderChart(state.machineData[machineList[state.selectedMachineTab]],
-                        `機台 ${machineList[state.selectedMachineTab]}`,
-                        state.showMonthly)}
+                    {renderChart(machineData[machineList[selectedMachineTab]],
+                        `機台 ${machineList[selectedMachineTab]}`,
+                        showMonthly)}
                 </Box>
             </StyledCard>
         </Box>
