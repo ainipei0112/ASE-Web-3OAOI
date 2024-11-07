@@ -288,21 +288,15 @@ const Dashboard = () => {
 
             {/* Overall Card */}
             <StyledCard>
-                <CardTitle title="Overall" >
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={showMonthly}
-                                onChange={(e) => dispatch({
-                                    type: 'SET_SHOW_MONTHLY',
-                                    payload: e.target.checked
-                                })}
-                                color="primary"
-                            />
-                        }
-                        label="顯示月報表"
-                    />
-                </CardTitle>
+                <CardTitle
+                    title="Overall"
+                    showSwitch={true}
+                    switchChecked={showMonthly}
+                    onSwitchChange={(e) => dispatch({
+                        type: 'SET_SHOW_MONTHLY',
+                        payload: e.target.checked
+                    })}
+                />
                 <Box>
                     {renderChart(overallData, 'Overall', showMonthly)}
                 </Box>
@@ -310,21 +304,15 @@ const Dashboard = () => {
 
             {/* Operation Card */}
             <StyledCard>
-                <CardTitle title="作業數量" >
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={showMonthly}
-                                onChange={(e) => dispatch({
-                                    type: 'SET_SHOW_MONTHLY',
-                                    payload: e.target.checked
-                                })}
-                                color="primary"
-                            />
-                        }
-                        label="顯示月報表"
-                    />
-                </CardTitle>
+                <CardTitle
+                    title="作業數量"
+                    showSwitch={true}
+                    switchChecked={showMonthly}
+                    onSwitchChange={(e) => dispatch({
+                        type: 'SET_SHOW_MONTHLY',
+                        payload: e.target.checked
+                    })}
+                />
                 <Box>
                     <OperationChartComponent
                         data={operationData}
@@ -337,21 +325,15 @@ const Dashboard = () => {
 
             {/* B/D Card */}
             <StyledCard>
-                <CardTitle title="By B/D" >
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={showMonthly}
-                                onChange={(e) => dispatch({
-                                    type: 'SET_SHOW_MONTHLY',
-                                    payload: e.target.checked
-                                })}
-                                color="primary"
-                            />
-                        }
-                        label="顯示月報表"
-                    />
-                </CardTitle>
+                <CardTitle
+                    title="By B/D"
+                    showSwitch={true}
+                    switchChecked={showMonthly}
+                    onSwitchChange={(e) => dispatch({
+                        type: 'SET_SHOW_MONTHLY',
+                        payload: e.target.checked
+                    })}
+                />
                 <Box>
                     <StyledTabs
                         scrollButtons="auto"
@@ -374,21 +356,15 @@ const Dashboard = () => {
 
             {/* M/C Card */}
             <StyledCard>
-                <CardTitle title="By M/C" >
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={showMonthly}
-                                onChange={(e) => dispatch({
-                                    type: 'SET_SHOW_MONTHLY',
-                                    payload: e.target.checked
-                                })}
-                                color="primary"
-                            />
-                        }
-                        label="顯示月報表"
-                    />
-                </CardTitle>
+                <CardTitle
+                    title="By M/C"
+                    showSwitch={true}
+                    switchChecked={showMonthly}
+                    onSwitchChange={(e) => dispatch({
+                        type: 'SET_SHOW_MONTHLY',
+                        payload: e.target.checked
+                    })}
+                />
                 <Box>
                     <StyledTabs
                         scrollButtons="auto"

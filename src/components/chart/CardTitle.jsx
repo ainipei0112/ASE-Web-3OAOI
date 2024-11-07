@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material'
+import { Box, FormControlLabel, Switch, Typography } from '@mui/material'
 import BarChartIcon from '@mui/icons-material/BarChart'
 
 const styles = {
@@ -25,7 +25,7 @@ const styles = {
     }
 }
 
-const CardTitle = ({ title, children }) => {
+const CardTitle = ({ title, showSwitch, onSwitchChange, switchChecked }) => {
 
     return (
         <Box sx={styles.cardHeader}>
@@ -33,7 +33,18 @@ const CardTitle = ({ title, children }) => {
                 <BarChartIcon sx={styles.headerIcon} />
                 <Typography variant="h6" sx={styles.headerTitle}>{title}</Typography>
             </Box>
-            {children}
+            {showSwitch && (
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={switchChecked}
+                            onChange={onSwitchChange}
+                            color="primary"
+                        />
+                    }
+                    label="顯示月報表"
+                />
+            )}
         </Box>
     )
 }
