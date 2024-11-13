@@ -331,8 +331,8 @@ const Dashboard = () => {
                     })}
                 />
                 <StyledTabs
-                    // scrollButtons="auto"
-                    // variant="scrollable"
+                    scrollButtons="auto"
+                    variant="scrollable"
                     value={selectedBdTab}
                     onChange={(e, newValue) => dispatch({
                         type: 'SET_SELECTED_BD_TAB',
@@ -360,8 +360,8 @@ const Dashboard = () => {
                     })}
                 />
                 <StyledTabs
-                    // scrollButtons="auto"
-                    // variant="scrollable"
+                    scrollButtons="auto"
+                    variant="scrollable"
                     value={selectedMachineTab}
                     onChange={(e, newValue) => dispatch({
                         type: 'SET_SELECTED_MACHINE_TAB',
