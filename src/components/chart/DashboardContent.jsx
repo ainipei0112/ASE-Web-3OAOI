@@ -281,10 +281,10 @@ const Dashboard = () => {
     return (
         <Box>
             {/* Summary Card */}
-            <StyledCard>
+            {/* <StyledCard>
                 <CardTitle title="Summary ( 5%太高沒資料 暫時卡1% )" />
                 <SummaryTable data={aoiData} />
-            </StyledCard>
+            </StyledCard> */}
 
             {/* Overall Card */}
             <StyledCard>
@@ -331,8 +331,8 @@ const Dashboard = () => {
                     })}
                 />
                 <StyledTabs
-                    scrollButtons="auto"
-                    variant="scrollable"
+                    // scrollButtons="auto"
+                    // variant="scrollable"
                     value={selectedBdTab}
                     onChange={(e, newValue) => dispatch({
                         type: 'SET_SELECTED_BD_TAB',
@@ -349,7 +349,7 @@ const Dashboard = () => {
             </StyledCard>
 
             {/* M/C Card */}
-            <StyledCard>
+            {/* <StyledCard>
                 <CardTitle
                     title="By M/C"
                     showSwitch={true}
@@ -360,8 +360,8 @@ const Dashboard = () => {
                     })}
                 />
                 <StyledTabs
-                    scrollButtons="auto"
-                    variant="scrollable"
+                    // scrollButtons="auto"
+                    // variant="scrollable"
                     value={selectedMachineTab}
                     onChange={(e, newValue) => dispatch({
                         type: 'SET_SELECTED_MACHINE_TAB',
@@ -375,7 +375,7 @@ const Dashboard = () => {
                 {renderChart(machineData[machineList[selectedMachineTab]],
                     `機台 ${machineList[selectedMachineTab]}`,
                     showMonthly)}
-            </StyledCard>
+            </StyledCard> */}
         </Box>
     )
 }
