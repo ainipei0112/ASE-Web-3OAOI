@@ -297,9 +297,7 @@ const Dashboard = () => {
                         payload: e.target.checked
                     })}
                 />
-                <Box>
-                    {renderChart(overallData, 'Overall', showMonthly)}
-                </Box>
+                {renderChart(overallData, 'Overall', showMonthly)}
             </StyledCard>
 
             {/* Operation Card */}
@@ -313,14 +311,12 @@ const Dashboard = () => {
                         payload: e.target.checked
                     })}
                 />
-                <Box>
-                    <OperationChartComponent
-                        data={operationData}
-                        title="BST 作業數量"
-                        sx={{ padding: 2 }}
-                        showMonthly={showMonthly}
-                    />
-                </Box>
+                <OperationChartComponent
+                    data={operationData}
+                    title="BST 作業數量"
+                    sx={{ padding: 2 }}
+                    showMonthly={showMonthly}
+                />
             </StyledCard>
 
             {/* B/D Card */}
@@ -334,24 +330,22 @@ const Dashboard = () => {
                         payload: e.target.checked
                     })}
                 />
-                <Box>
-                    <StyledTabs
-                        scrollButtons="auto"
-                        variant="scrollable"
-                        value={selectedBdTab}
-                        onChange={(e, newValue) => dispatch({
-                            type: 'SET_SELECTED_BD_TAB',
-                            payload: newValue
-                        })}
-                    >
-                        {bdList.map((bd, index) => (
-                            <Tab key={bd} label={bd} value={index} />
-                        ))}
-                    </StyledTabs>
-                    {renderChart(bdData[bdList[selectedBdTab]],
-                        `${bdList[selectedBdTab]}`,
-                        showMonthly)}
-                </Box>
+                <StyledTabs
+                    // scrollButtons="auto"
+                    // variant="scrollable"
+                    value={selectedBdTab}
+                    onChange={(e, newValue) => dispatch({
+                        type: 'SET_SELECTED_BD_TAB',
+                        payload: newValue
+                    })}
+                >
+                    {bdList.map((bd, index) => (
+                        <Tab key={bd} label={bd} value={index} />
+                    ))}
+                </StyledTabs>
+                {renderChart(bdData[bdList[selectedBdTab]],
+                    `${bdList[selectedBdTab]}`,
+                    showMonthly)}
             </StyledCard>
 
             {/* M/C Card */}
@@ -365,24 +359,22 @@ const Dashboard = () => {
                         payload: e.target.checked
                     })}
                 />
-                <Box>
-                    <StyledTabs
-                        scrollButtons="auto"
-                        variant="scrollable"
-                        value={selectedMachineTab}
-                        onChange={(e, newValue) => dispatch({
-                            type: 'SET_SELECTED_MACHINE_TAB',
-                            payload: newValue
-                        })}
-                    >
-                        {machineList.map((machine, index) => (
-                            <Tab key={machine} label={machine} value={index} />
-                        ))}
-                    </StyledTabs>
-                    {renderChart(machineData[machineList[selectedMachineTab]],
-                        `機台 ${machineList[selectedMachineTab]}`,
-                        showMonthly)}
-                </Box>
+                <StyledTabs
+                    // scrollButtons="auto"
+                    // variant="scrollable"
+                    value={selectedMachineTab}
+                    onChange={(e, newValue) => dispatch({
+                        type: 'SET_SELECTED_MACHINE_TAB',
+                        payload: newValue
+                    })}
+                >
+                    {machineList.map((machine, index) => (
+                        <Tab key={machine} label={machine} value={index} />
+                    ))}
+                </StyledTabs>
+                {renderChart(machineData[machineList[selectedMachineTab]],
+                    `機台 ${machineList[selectedMachineTab]}`,
+                    showMonthly)}
             </StyledCard>
         </Box>
     )

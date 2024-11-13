@@ -66,8 +66,8 @@ function calculateTotals(datas, period = 'daily') {
             const monthIndex = parseInt(date.substring(5, 7)) - 1
             return monthNames[monthIndex]
         } // 轉換月份簡碼作為key：Aug
-        if (isWeekly) return getWeekNumberForDate(date) // 取得週數作為key：W33
-        return date.substring(0, 10) // 使用日期作為key：2024-08-16
+        if (isWeekly) return getWeekNumberForDate(date) // 取得週數作為key：W46
+        return date.substring(0, 10) // 使用日期作為key：2024-11-12
     }
 
     // 根據key判別當前資料週期
