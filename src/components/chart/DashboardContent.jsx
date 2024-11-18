@@ -5,9 +5,7 @@ import { useContext, useEffect, useMemo, useReducer } from 'react'
 import {
     Box,
     Card,
-    FormControlLabel,
     Grid,
-    Switch,
     Tab,
     Tabs,
     Table,
@@ -23,10 +21,12 @@ import { styled } from '@mui/system'
 // 外部套件
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
+import HighchartsMore from 'highcharts/highcharts-more'
+HighchartsMore(Highcharts)
 
 // 自定義套件
 import { AppContext } from '../../Context.jsx'
-import { calculateAverages, calculateTotals, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '../../Function.jsx'
+import { calculateMachineData, calculateAverages, calculateTotals, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '../../Function.jsx'
 import Loader from '../Loader.jsx'
 import useChartOptions from '../chart/useChartOptions.jsx'
 import CardTitle from '../chart/CardTitle.jsx'
@@ -138,6 +138,25 @@ const OperationChartComponent = ({ data, title, sx, showMonthly = false }) => {
     )
 }
 
+const MachineChartComponent = ({ data, title, sx, showMonthly = false }) => {
+    const { createMachineChartOptions } = useChartOptions()
+    const periods = showMonthly ? ['Daily', 'Weekly', 'Monthly'] : ['Daily', 'Weekly']
+    const gridSize = showMonthly ? 4 : 6
+
+    return (
+        <ChartContainer container spacing={2} sx={sx}>
+            {periods.map((period) => (
+                <Grid item xs={12} md={gridSize} key={period}>
+                    <HighchartsReact
+                        highcharts={Highcharts}
+                        options={createMachineChartOptions(data[period.toLowerCase()], period, title)}
+                    />
+                </Grid>
+            ))}
+        </ChartContainer>
+    )
+}
+
 const renderChart = (data, title, showMonthly) => data && (
     <ChartComponent data={data} title={title} sx={{ padding: 2 }} showMonthly={showMonthly} />
 )
@@ -232,22 +251,26 @@ const Dashboard = () => {
                 if (!aoiData || aoiData.length === 0) return
                 dispatch({ type: 'SET_LOADING', payload: true })
 
-                const processData = (data, key) => ({
-                    [key]: {
-                        monthly: calculateAverages(filterDataByMonthRange(data, 3), 'monthly'),
+                const processData = (data, key, type) => ({
+                    [key]: type === 'bd' ? {
+                        daily: calculateAverages(filterDataByDateRange(data, 7), 'daily'),
                         weekly: calculateAverages(filterDataByWeekRange(data, 5), 'weekly'),
-                        daily: calculateAverages(filterDataByDateRange(data, 7), 'daily')
+                        monthly: calculateAverages(filterDataByMonthRange(data, 3), 'monthly')
+                    } : {
+                        daily: calculateMachineData(filterDataByDateRange(data, 1)),
+                        weekly: calculateMachineData(filterDataByWeekRange(data, 1)),
+                        monthly: calculateMachineData(filterDataByMonthRange(data, 1))
                     }
                 })
 
-                const updateData = (list, filterKey) =>
+                const updateData = (list, filterKey, type) =>
                     list.reduce((acc, item) => ({
                         ...acc,
-                        ...processData(aoiData.filter(data => data[filterKey] === item), item)
+                        ...processData(aoiData.filter(data => data[filterKey] === item), item, type)
                     }), {})
 
-                const bdResult = updateData(bdList, 'Device_Id')
-                const machineResult = updateData(machineList, 'Machine_Id')
+                const bdResult = updateData(bdList, 'Device_Id', 'bd')
+                const machineResult = updateData(machineList, 'Machine_Id', 'machine')
 
                 if (mounted) {
                     dispatch({ type: 'SET_BD_DATA', payload: bdResult })
@@ -349,7 +372,7 @@ const Dashboard = () => {
             </StyledCard>
 
             {/* M/C Card */}
-            {/* <StyledCard>
+            <StyledCard>
                 <CardTitle
                     title="By M/C"
                     showSwitch={true}
@@ -372,10 +395,13 @@ const Dashboard = () => {
                         <Tab key={machine} label={machine} value={index} />
                     ))}
                 </StyledTabs>
-                {renderChart(machineData[machineList[selectedMachineTab]],
-                    `機台 ${machineList[selectedMachineTab]}`,
-                    showMonthly)}
-            </StyledCard> */}
+                <MachineChartComponent
+                    data={machineData[machineList[selectedMachineTab]]}
+                    title={`機台 ${machineList[selectedMachineTab]}`}
+                    sx={{ padding: 2 }}
+                    showMonthly={showMonthly}
+                />
+            </StyledCard>
         </Box>
     )
 }

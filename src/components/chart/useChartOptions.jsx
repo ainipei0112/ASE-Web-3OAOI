@@ -88,6 +88,64 @@ const useChartOptions = () => {
         }
     }
 
+    // 建立機台圖表設定
+    const createMachineChartOptions = (periodData, periodTitle, title) => {
+        // 整理每個 drawingNo 的所有 overkillRate 數據
+        const drawingData = periodData.reduce((acc, item) => {
+            const drawingNo = item.drawingNo
+            if (!acc[drawingNo]) {
+                acc[drawingNo] = []
+            }
+            // 收集該 drawingNo 的所有 overkillRate
+            item.results.forEach(result => {
+                acc[drawingNo].push(result.overkillRate)
+            })
+            return acc
+        }, {})
+
+        // 計算箱型圖數據
+        const boxplotData = Object.entries(drawingData).map(([drawingNo, rates]) => {
+            const sortedRates = rates.sort((a, b) => a - b)
+            const q1 = sortedRates[Math.floor(sortedRates.length * 0.25)]
+            const median = sortedRates[Math.floor(sortedRates.length * 0.5)]
+            const q3 = sortedRates[Math.floor(sortedRates.length * 0.75)]
+            const min = sortedRates[0]
+            const max = sortedRates[sortedRates.length - 1]
+
+            return {
+                name: drawingNo,
+                data: [[min, q1, median, q3, max]]
+            }
+        })
+
+        return {
+            title: { text: `${periodTitle} ${title}` },
+            credits: { enabled: false },
+            exporting: { enabled: false },
+            accessibility: { enabled: false },
+            chart: { type: 'boxplot' },
+            xAxis: {
+                categories: Object.keys(drawingData),
+            },
+            yAxis: {
+                title: { text: 'Overkill Rate (%)' },
+                min: 0
+            },
+            series: boxplotData,
+            tooltip: {
+                headerFormat: '<em>Drawing No: {point.key}</em><br/>',
+                pointFormat: `
+                最大值: {point.high}<br/>
+                上四分位數: {point.q3}<br/>
+                中位數: {point.median}<br/>
+                下四分位數: {point.q1}<br/>
+                最小值: {point.low}<br/>
+            `
+            }
+        }
+    }
+
+
     // 建立作業數量圖表設定
     const createOperationChartOptions = (periodData, periodTitle, title) => ({
         title: { text: `${periodTitle} ${title}` },
@@ -156,6 +214,7 @@ const useChartOptions = () => {
 
     return {
         createBaseChartOptions,
+        createMachineChartOptions,
         createOperationChartOptions
     }
 }

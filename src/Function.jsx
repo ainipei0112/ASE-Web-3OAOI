@@ -187,6 +187,58 @@ function filterDataByDateRange(datas, days) {
     })
 }
 
+// 濾出機台盒鬚圖的資料
+function calculateMachineData(datas, period = 'daily') {
+    const map = {}
+    const getDateKey = (date, isWeekly, isMonthly) => {
+        if (isMonthly) {
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+            const monthIndex = parseInt(date.substring(5, 7)) - 1
+            return monthNames[monthIndex]
+        }
+        if (isWeekly) return getWeekNumberForDate(date)
+        return date.substring(0, 10)
+    }
+
+    datas.forEach(({ Ao_Time_Start, Drawing_No, Strip_No, Overkill_Rate }) => {
+        if (!map[Drawing_No]) {
+            map[Drawing_No] = {
+                drawingNo: Drawing_No,
+                results: []
+            }
+        }
+
+        const dateKey = getDateKey(Ao_Time_Start, period === 'weekly', period === 'monthly')
+
+        map[Drawing_No].results.push({
+            key: dateKey,
+            periodType: period,
+            stripNo: Strip_No,
+            overkillRate: parseFloat(Overkill_Rate)
+        })
+    })
+
+    const calculatedData = Object.entries(map).map(([drawingNo, data]) => {
+        // Sort results based on date
+        data.results.sort((a, b) => {
+            if (period === 'weekly') {
+                return a.key.localeCompare(b.key)
+            } else {
+                // For daily and monthly, sort by the key
+                return a.key.localeCompare(b.key)
+            }
+        })
+
+        return {
+            drawingNo,
+            results: data.results
+        }
+    })
+
+    return calculatedData
+}
+
 // 計算出日期所屬的週數
 function getWeekNumberForDate(dateString) {
     const date = new Date(dateString)
@@ -197,4 +249,4 @@ function getWeekNumberForDate(dateString) {
     return 'W' + weekNumber
 }
 
-export { calculateAverages, calculateTotals, getWeekNumberForDate, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange }
+export { calculateAverages, calculateTotals, getWeekNumberForDate, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange, calculateMachineData }
