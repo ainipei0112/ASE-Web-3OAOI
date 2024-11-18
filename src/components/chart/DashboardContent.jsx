@@ -55,6 +55,20 @@ const StyledTabs = styled(Tabs)({
     }
 })
 
+const AlertTab = styled(Tab)(({ theme, isAlert }) => ({
+    '&.MuiTab-root': {
+        ...(isAlert && {
+            backgroundColor: '#ffe6e6',
+            animation: 'pulse 2s infinite',
+            '@keyframes pulse': {
+                '0%': { backgroundColor: '#ffe6e6' },
+                '50%': { backgroundColor: '#ffcccc' },
+                '100%': { backgroundColor: '#ffe6e6' }
+            }
+        })
+    }
+}))
+
 const StyledTableContainer = styled(TableContainer)({
     '& .MuiTableCell-root': {
         padding: '8px 16px',
@@ -362,9 +376,20 @@ const Dashboard = () => {
                         payload: newValue
                     })}
                 >
-                    {bdList.map((bd, index) => (
-                        <Tab key={bd} label={bd} value={index} />
-                    ))}
+                    {bdList.map((bd, index) => {
+                        const bdDataSet = bdData[bd]?.daily || []
+                        const lastDataPoint = bdDataSet[bdDataSet.length - 1]
+                        const isOverThreshold = lastDataPoint?.averageOverkillRate > 1
+
+                        return (
+                            <AlertTab
+                                key={bd}
+                                label={isOverThreshold ? `${bd} ⚠️` : bd}
+                                value={index}
+                                isAlert={isOverThreshold}
+                            />
+                        )
+                    })}
                 </StyledTabs>
                 {renderChart(bdData[bdList[selectedBdTab]],
                     `${bdList[selectedBdTab]}`,
