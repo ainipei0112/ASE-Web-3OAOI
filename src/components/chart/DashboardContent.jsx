@@ -22,7 +22,9 @@ import { styled } from '@mui/system'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 import HighchartsMore from 'highcharts/highcharts-more'
+import NoDataToDisplay from 'highcharts/modules/no-data-to-display'
 HighchartsMore(Highcharts)
+NoDataToDisplay(Highcharts)
 
 // 自定義套件
 import { AppContext } from '../../Context.jsx'
