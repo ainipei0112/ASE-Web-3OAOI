@@ -36,7 +36,7 @@ import CardTitle from '../chart/CardTitle.jsx'
 // 樣式定義
 const StyledCard = styled(Card)({
     border: '1px solid #9AD09C',
-    minHeight: 400,
+    minHeight: 200,
     backgroundColor: '#ffffff',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
     marginBottom: 3
@@ -184,21 +184,38 @@ const SummaryTable = ({ data }) => {
         yesterday.setDate(yesterday.getDate() - 1)
         const yesterdayString = yesterday.toISOString().split('T')[0]
 
-        // 過濾出昨天的資料
-        return data
+        // 過濾出昨天的資料並進行分組計算
+        const groupedData = data
             .filter(item => item.Ao_Time_Start.split(' ')[0] === yesterdayString)
-            .map(item => ({
-                Device_Id: item.Device_Id,
-                Drawing_No: item.Drawing_No,
-                Pass_Rate: item.Pass_Rate,
-                Overkill_Rate: item.Overkill_Rate
-            }))
-            .sort((a, b) => b.Overkill_Rate - a.Overkill_Rate)
+            .reduce((acc, item) => {
+                const key = `${item.Drawing_No}-${item.Device_Id}`
+                if (!acc[key]) {
+                    acc[key] = {
+                        Drawing_No: item.Drawing_No,
+                        Device_Id: item.Device_Id,
+                        Pass_Rate: [],
+                        Overkill_Rate: []
+                    }
+                }
+                acc[key].Pass_Rate.push(parseFloat(item.Pass_Rate))
+                acc[key].Overkill_Rate.push(parseFloat(item.Overkill_Rate))
+                return acc
+            }, {})
+
+        // 計算每組的平均值
+        return Object.values(groupedData).map(group => ({
+            Drawing_No: group.Drawing_No,
+            Device_Id: group.Device_Id,
+            Pass_Rate: ((group.Pass_Rate.reduce((a, b) => a + b, 0) / group.Pass_Rate.length) * 100).toFixed(1),
+            Overkill_Rate: ((group.Overkill_Rate.reduce((a, b) => a + b, 0) / group.Overkill_Rate.length) * 100).toFixed(1)
+        })).sort((a, b) => b.Overkill_Rate - a.Overkill_Rate)
     }, [data])
 
-    // 計算平均值
-    const averagePassRate = todayData.reduce((sum, item) => sum + parseFloat(item.Pass_Rate), 0) / todayData.length
-    const averageOverkillRate = todayData.reduce((sum, item) => sum + parseFloat(item.Overkill_Rate), 0) / todayData.length
+    // 計算總平均值
+    const averagePassRate = todayData.length ?
+        parseFloat((todayData.reduce((sum, item) => sum + parseFloat(item.Pass_Rate), 0) / todayData.length).toFixed(2)) : 0
+    const averageOverkillRate = todayData.length ?
+        parseFloat((todayData.reduce((sum, item) => sum + parseFloat(item.Overkill_Rate), 0) / todayData.length).toFixed(2)) : 0
 
     return (
         <StyledTableContainer component={Paper}>
@@ -212,22 +229,27 @@ const SummaryTable = ({ data }) => {
                     </TableHeaderRow>
                 </TableHead>
                 <TableBody>
-                    {Object.values(todayData).map((row, index) => (
-                        <TableRow key={index} style={{ border: parseFloat(row.Overkill_Rate) > 1 ? '2px solid red' : 'inherit', backgroundColor: parseFloat(row.Overkill_Rate) > 1 ? '#ffe6e6' : 'inherit' }}>
+                    {todayData.map((row, index) => (
+                        <TableRow
+                            key={index}
+                            style={{
+                                border: parseFloat(row.Overkill_Rate) > 5 ? '2px solid red' : 'inherit',
+                                backgroundColor: parseFloat(row.Overkill_Rate) > 5 ? '#ffe6e6' : 'inherit'
+                            }}
+                        >
                             <TableCell>{row.Drawing_No}</TableCell>
                             <TableCell>{row.Device_Id}</TableCell>
-                            <TableCell align="right">{row.Pass_Rate}</TableCell>
-                            <TableCell align="right">{row.Overkill_Rate}</TableCell>
+                            <TableCell align="right">{row.Pass_Rate}%</TableCell>
+                            <TableCell align="right">{row.Overkill_Rate}%</TableCell>
                         </TableRow>
                     ))}
-                    {Object.values(todayData).length === 0 && (
+                    {todayData.length === 0 && (
                         <TableRow>
                             <TableCell colSpan={4} align="center">
                                 No data available for today
                             </TableCell>
                         </TableRow>
                     )}
-                    {/* 加入平均值顯示 */}
                     {todayData.length > 1 && (
                         <TableRow>
                             <TableCell colSpan={2} align="right">總計</TableCell>
@@ -240,6 +262,7 @@ const SummaryTable = ({ data }) => {
         </StyledTableContainer>
     )
 }
+
 
 const Dashboard = () => {
     const { aoiData } = useContext(AppContext)
@@ -320,10 +343,10 @@ const Dashboard = () => {
     return (
         <Box>
             {/* Summary Card */}
-            {/* <StyledCard>
-                <CardTitle title="Summary ( 5%太高沒資料 暫時卡1% )" />
+            <StyledCard>
+                <CardTitle title="Summary" />
                 <SummaryTable data={aoiData} />
-            </StyledCard> */}
+            </StyledCard>
 
             {/* Overall Card */}
             <StyledCard>
@@ -370,8 +393,8 @@ const Dashboard = () => {
                     })}
                 />
                 <StyledTabs
-                    // scrollButtons="auto"
-                    // variant="scrollable"
+                    scrollButtons="auto"
+                    variant="scrollable"
                     value={selectedBdTab}
                     onChange={(e, newValue) => dispatch({
                         type: 'SET_SELECTED_BD_TAB',
@@ -410,8 +433,8 @@ const Dashboard = () => {
                     })}
                 />
                 <StyledTabs
-                    // scrollButtons="auto"
-                    // variant="scrollable"
+                    scrollButtons="auto"
+                    variant="scrollable"
                     value={selectedMachineTab}
                     onChange={(e, newValue) => dispatch({
                         type: 'SET_SELECTED_MACHINE_TAB',
