@@ -1,11 +1,15 @@
 // React套件
-import { useContext, useEffect, useMemo, useReducer } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useReducer } from 'react'
 
 // MUI套件
 import {
     Box,
     Card,
+    Dialog,
+    DialogTitle,
+    DialogContent,
     Grid,
+    IconButton,
     Tab,
     Tabs,
     Table,
@@ -17,6 +21,7 @@ import {
     Paper
 } from '@mui/material'
 import { styled } from '@mui/system'
+import CloseIcon from '@mui/icons-material/Close'
 
 // 外部套件
 import Highcharts from 'highcharts'
@@ -57,7 +62,7 @@ const StyledTabs = styled(Tabs)({
     }
 })
 
-const AlertTab = styled(Tab)(({ theme, isAlert }) => ({
+const AlertTab = styled(Tab)(({ isAlert }) => ({
     '&.MuiTab-root': {
         ...(isAlert && {
             backgroundColor: '#ffe6e6',
@@ -92,7 +97,9 @@ const initialState = {
     selectedMachineTab: 0,
     isLoading: true,
     chartsReady: false,
-    showMonthly: false
+    showMonthly: false,
+    dialogOpen: false,
+    detailData: null
 }
 
 const reducer = (state, action) => {
@@ -111,80 +118,24 @@ const reducer = (state, action) => {
             return { ...state, chartsReady: action.payload }
         case 'SET_SHOW_MONTHLY':
             return { ...state, showMonthly: action.payload }
+        case 'SET_DIALOG_OPEN':
+            return { ...state, dialogOpen: action.payload }
+        case 'SET_DETAIL_DATA':
+            return { ...state, detailData: action.payload }
         default:
             return state
     }
 }
 
-const ChartComponent = ({ data, title, sx, showMonthly = false }) => {
-    const { createBaseChartOptions } = useChartOptions()
-    const periods = showMonthly ? ['Daily', 'Weekly', 'Monthly'] : ['Daily', 'Weekly']
-    const gridSize = showMonthly ? 4 : 6
-
-    return (
-        <ChartContainer container spacing={2} sx={sx}>
-            {periods.map((period) => (
-                <Grid item xs={12} md={gridSize} key={period}>
-                    <HighchartsReact
-                        highcharts={Highcharts}
-                        options={createBaseChartOptions(data[period.toLowerCase()], period, title)}
-                    />
-                </Grid>
-            ))}
-        </ChartContainer>
-    )
-}
-
-const OperationChartComponent = ({ data, title, sx, showMonthly = false }) => {
-    const { createOperationChartOptions } = useChartOptions()
-    const periods = showMonthly ? ['Daily', 'Weekly', 'Monthly'] : ['Daily', 'Weekly']
-    const gridSize = showMonthly ? 4 : 6
-
-    return (
-        <ChartContainer container spacing={2} sx={sx}>
-            {periods.map((period) => (
-                <Grid item xs={12} md={gridSize} key={period}>
-                    <HighchartsReact
-                        highcharts={Highcharts}
-                        options={createOperationChartOptions(data[period.toLowerCase()], period, title)}
-                    />
-                </Grid>
-            ))}
-        </ChartContainer>
-    )
-}
-
-const MachineChartComponent = ({ data, title, sx, showMonthly = false }) => {
-    const { createMachineChartOptions } = useChartOptions()
-    const periods = showMonthly ? ['Daily', 'Weekly', 'Monthly'] : ['Daily', 'Weekly']
-    const gridSize = showMonthly ? 4 : 6
-
-    return (
-        <ChartContainer container spacing={2} sx={sx}>
-            {periods.map((period) => (
-                <Grid item xs={12} md={gridSize} key={period}>
-                    <HighchartsReact
-                        highcharts={Highcharts}
-                        options={createMachineChartOptions(data[period.toLowerCase()], period, title)}
-                    />
-                </Grid>
-            ))}
-        </ChartContainer>
-    )
-}
-
-const renderChart = (data, title, showMonthly) => data && (
-    <ChartComponent data={data} title={title} sx={{ padding: 2 }} showMonthly={showMonthly} />
-)
-
+// Overall Daily Summary
 const SummaryTable = ({ data }) => {
-    const todayData = useMemo(() => {
+    const yesterdayData = useMemo(() => {
         // 取得昨天的日期
         const yesterday = new Date()
         yesterday.setDate(yesterday.getDate() - 1)
         const yesterdayString = yesterday.toISOString().split('T')[0]
 
-        // 過濾出昨天的資料並進行分組計算
+        // 過濾出昨天的資料並分組計算
         const groupedData = data
             .filter(item => item.Ao_Time_Start.split(' ')[0] === yesterdayString)
             .reduce((acc, item) => {
@@ -212,10 +163,10 @@ const SummaryTable = ({ data }) => {
     }, [data])
 
     // 計算總平均值
-    const averagePassRate = todayData.length ?
-        parseFloat((todayData.reduce((sum, item) => sum + parseFloat(item.Pass_Rate), 0) / todayData.length).toFixed(2)) : 0
-    const averageOverkillRate = todayData.length ?
-        parseFloat((todayData.reduce((sum, item) => sum + parseFloat(item.Overkill_Rate), 0) / todayData.length).toFixed(2)) : 0
+    const averagePassRate = yesterdayData.length ?
+        parseFloat((yesterdayData.reduce((sum, item) => sum + parseFloat(item.Pass_Rate), 0) / yesterdayData.length).toFixed(2)) : 0
+    const averageOverkillRate = yesterdayData.length ?
+        parseFloat((yesterdayData.reduce((sum, item) => sum + parseFloat(item.Overkill_Rate), 0) / yesterdayData.length).toFixed(2)) : 0
 
     return (
         <StyledTableContainer component={Paper}>
@@ -229,7 +180,7 @@ const SummaryTable = ({ data }) => {
                     </TableHeaderRow>
                 </TableHead>
                 <TableBody>
-                    {todayData.map((row, index) => (
+                    {yesterdayData.map((row, index) => (
                         <TableRow
                             key={index}
                             style={{
@@ -243,14 +194,14 @@ const SummaryTable = ({ data }) => {
                             <TableCell align="right">{row.Overkill_Rate}%</TableCell>
                         </TableRow>
                     ))}
-                    {todayData.length === 0 && (
+                    {yesterdayData.length === 0 && (
                         <TableRow>
                             <TableCell colSpan={4} align="center">
                                 No data available for today
                             </TableCell>
                         </TableRow>
                     )}
-                    {todayData.length > 1 && (
+                    {yesterdayData.length > 1 && (
                         <TableRow>
                             <TableCell colSpan={2} align="right">總計</TableCell>
                             <TableCell align="right">{averagePassRate}%</TableCell>
@@ -263,6 +214,83 @@ const SummaryTable = ({ data }) => {
     )
 }
 
+// 控制 Overall & BD 圖表渲染
+const ChartComponent = ({ data, title, sx, showMonthly = false, onColumnClick }) => {
+    const { createBaseChartOptions } = useChartOptions()
+    const periods = showMonthly ? ['Daily', 'Weekly', 'Monthly'] : ['Daily', 'Weekly']
+    const gridSize = showMonthly ? 4 : 6
+
+    return (
+        <ChartContainer container spacing={2} sx={sx}>
+            {periods.map((period) => {
+                const options = createBaseChartOptions(data[period.toLowerCase()], period, title)
+
+                // 彈窗點擊事件
+                if (options.series?.[0]) {
+                    options.plotOptions.series = {
+                        ...options.plotOptions.series,
+                        events: {
+                            click: function (event) {
+                                if (event.point && event.point.category) {
+                                    onColumnClick(title, event.point.category)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return (
+                    <Grid item xs={12} md={gridSize} key={period}>
+                        <HighchartsReact
+                            highcharts={Highcharts}
+                            options={options}
+                        />
+                    </Grid>
+                )
+            })}
+        </ChartContainer>
+    )
+}
+
+// 控制作業數量圖表渲染
+const OperationChartComponent = ({ data, title, sx, showMonthly = false }) => {
+    const { createOperationChartOptions } = useChartOptions()
+    const periods = showMonthly ? ['Daily', 'Weekly', 'Monthly'] : ['Daily', 'Weekly']
+    const gridSize = showMonthly ? 4 : 6
+
+    return (
+        <ChartContainer container spacing={2} sx={sx}>
+            {periods.map((period) => (
+                <Grid item xs={12} md={gridSize} key={period}>
+                    <HighchartsReact
+                        highcharts={Highcharts}
+                        options={createOperationChartOptions(data[period.toLowerCase()], period, title)}
+                    />
+                </Grid>
+            ))}
+        </ChartContainer>
+    )
+}
+
+// 控制機台圖表渲染
+const MachineChartComponent = ({ data, title, sx, showMonthly = false }) => {
+    const { createMachineChartOptions } = useChartOptions()
+    const periods = showMonthly ? ['Daily', 'Weekly', 'Monthly'] : ['Daily', 'Weekly']
+    const gridSize = showMonthly ? 4 : 6
+
+    return (
+        <ChartContainer container spacing={2} sx={sx}>
+            {periods.map((period) => (
+                <Grid item xs={12} md={gridSize} key={period}>
+                    <HighchartsReact
+                        highcharts={Highcharts}
+                        options={createMachineChartOptions(data[period.toLowerCase()], period, title)}
+                    />
+                </Grid>
+            ))}
+        </ChartContainer>
+    )
+}
 
 const Dashboard = () => {
     const { aoiData } = useContext(AppContext)
@@ -274,8 +302,47 @@ const Dashboard = () => {
         selectedMachineTab,
         isLoading,
         chartsReady,
-        showMonthly
+        showMonthly,
+        dialogOpen,
+        detailData
     } = state
+
+    // 添加點擊事件處理函數
+    const handleColumnClick = useCallback(async (deviceId, date) => {
+        try {
+            const response = await fetch('http://10.11.33.122:1234/thirdAOI.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'getDetailsByDate',
+                    deviceId,
+                    date
+                })
+            })
+            const data = await response.json()
+            if (data.success) {
+                dispatch({ type: 'SET_DETAIL_DATA', payload: { deviceId, date, data: data.results } })
+                dispatch({ type: 'SET_DIALOG_OPEN', payload: true })
+            }
+        } catch (error) {
+            console.error('Error fetching details:', error)
+        }
+    }, [])
+
+    // 關閉查詢對話框
+    const handleClose = () => {
+        dispatch({ type: 'SET_DIALOG_OPEN', payload: false })
+    }
+
+    const renderChart = (data, title, showMonthly) => data && (
+        <ChartComponent
+            data={data}
+            title={title}
+            sx={{ padding: 2 }}
+            showMonthly={showMonthly}
+            onColumnClick={handleColumnClick}
+        />
+    )
 
     const GetUniqueSortedList = (key, data) => useMemo(() =>
         [...new Set(data.map(item => item[key]))].sort(), [data, key])
@@ -452,6 +519,79 @@ const Dashboard = () => {
                     showMonthly={showMonthly}
                 />
             </StyledCard>
+
+            {/* By機台作業狀況彈窗 */}
+            <Dialog
+                open={dialogOpen}
+                onClose={handleClose}
+                maxWidth="md"
+                fullWidth
+            >
+                <DialogTitle>
+                    {`${detailData?.deviceId} - ${detailData?.date} 機台作業狀況`}
+                    <IconButton
+                        onClick={handleClose}
+                        sx={{
+                            position: 'absolute',
+                            right: 8,
+                            top: 8,
+                            color: 'gray',
+                        }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent>
+                    {detailData && (
+                        <HighchartsReact
+                            highcharts={Highcharts}
+                            options={{
+                                title: { text: 'By 機台作業狀況' },
+                                credits: { enabled: false },
+                                exporting: { enabled: false },
+                                accessibility: { enabled: false },
+                                xAxis: {
+                                    categories: detailData.data.map(d => d.Machine_Id)
+                                },
+                                yAxis: [{
+                                    title: { text: 'Rate (%)' },
+                                    min: 0,
+                                    max: 100
+                                }, {
+                                    title: { text: 'PPM' },
+                                    opposite: true
+                                }],
+                                series: [{
+                                    name: 'Fail PPM',
+                                    type: 'column',
+                                    yAxis: 1,
+                                    data: detailData.data.map(d => parseFloat(d.Fail_Ppm))
+                                }, {
+                                    name: 'Pass Rate',
+                                    type: 'spline',
+                                    data: detailData.data.map(d => parseFloat(d.Pass_Rate))
+                                }, {
+                                    name: 'Overkill Rate',
+                                    type: 'spline',
+                                    data: detailData.data.map(d => parseFloat(d.Overkill_Rate))
+                                }],
+                                tooltip: {
+                                    shared: true,
+                                    crosshairs: true
+                                },
+                                plotOptions: {
+                                    series: {
+                                        dataLabels: {
+                                            enabled: true,
+                                            style: { fontSize: '10px' }
+                                        }
+                                    }
+                                }
+                            }}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
         </Box>
     )
 }

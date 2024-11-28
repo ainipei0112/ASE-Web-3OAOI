@@ -35,6 +35,14 @@ const Actions = () => {
         return await fetcher('http://10.11.33.122:1234/thirdAOI.php', { action: 'exportDataByCondition', drawingNo, machineId })
     }
 
+    const getDetailsByDate = async (deviceId, date) => {
+        return await fetcher('http://10.11.33.122:1234/thirdAOI.php', {
+            action: 'getDetailsByDate',
+            deviceId,
+            date
+        })
+    }
+
     const sendEmail = async (emailData) => {
         return await fetcher('http://10.11.33.122:1234/thirdAOI.php', { action: 'mailAlert', emailData })
     }
@@ -44,6 +52,7 @@ const Actions = () => {
         searchThirdAoiData,
         searchByCondition,
         exportDataByCondition,
+        getDetailsByDate,
         sendEmail,
     }
 }
