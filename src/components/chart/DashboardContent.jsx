@@ -550,8 +550,19 @@ const Dashboard = () => {
                                 credits: { enabled: false },
                                 exporting: { enabled: false },
                                 accessibility: { enabled: false },
+                                plotOptions: {
+                                    series: {
+                                        dataLabels: {
+                                            enabled: true,
+                                            formatter: function () {
+                                                return this.y.toLocaleString()
+                                            },
+                                            style: { fontSize: '10px' }
+                                        }
+                                    }
+                                },
                                 xAxis: {
-                                    categories: detailData.data.map(d => d.Machine_Id)
+                                    categories: [...new Set(detailData.data.map(d => d.Machine_Id))].sort()
                                 },
                                 yAxis: [{
                                     title: { text: 'Rate (%)' },
@@ -565,28 +576,41 @@ const Dashboard = () => {
                                     name: 'Fail PPM',
                                     type: 'column',
                                     yAxis: 1,
-                                    data: detailData.data.map(d => parseFloat(d.Fail_Ppm))
+                                    data: [...new Set(detailData.data.map(d => d.Machine_Id))]
+                                        .sort()
+                                        .map(machineId => {
+                                            const machineData = detailData.data.filter(d => d.Machine_Id === machineId)
+                                            const avgFailPpm = parseFloat((machineData.reduce((sum, d) =>
+                                                sum + parseFloat(d.Fail_Ppm), 0) / machineData.length).toFixed(2))
+                                            return avgFailPpm
+                                        })
                                 }, {
                                     name: 'Pass Rate',
                                     type: 'spline',
-                                    data: detailData.data.map(d => parseFloat(d.Pass_Rate))
+                                    data: [...new Set(detailData.data.map(d => d.Machine_Id))]
+                                        .sort()
+                                        .map(machineId => {
+                                            const machineData = detailData.data.filter(d => d.Machine_Id === machineId)
+                                            const avgPassRate = parseFloat((machineData.reduce((sum, d) =>
+                                                sum + parseFloat(d.Pass_Rate), 0) / machineData.length).toFixed(2))
+                                            return avgPassRate
+                                        })
                                 }, {
                                     name: 'Overkill Rate',
                                     type: 'spline',
-                                    data: detailData.data.map(d => parseFloat(d.Overkill_Rate))
+                                    data: [...new Set(detailData.data.map(d => d.Machine_Id))]
+                                        .sort()
+                                        .map(machineId => {
+                                            const machineData = detailData.data.filter(d => d.Machine_Id === machineId)
+                                            const avgOverkillRate = parseFloat((machineData.reduce((sum, d) =>
+                                                sum + parseFloat(d.Overkill_Rate), 0) / machineData.length).toFixed(2))
+                                            return avgOverkillRate
+                                        })
                                 }],
                                 tooltip: {
                                     shared: true,
                                     crosshairs: true
                                 },
-                                plotOptions: {
-                                    series: {
-                                        dataLabels: {
-                                            enabled: true,
-                                            style: { fontSize: '10px' }
-                                        }
-                                    }
-                                }
                             }}
                         />
                     )}

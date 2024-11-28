@@ -1,4 +1,10 @@
 const useChartOptions = () => {
+
+    // 將數字格式化為千分位
+    const formatWithCommas = (number) => {
+        return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+    }
+
     // 建立基礎的無資料配置
     const createNoDataConfig = (periodTitle, title) => ({
         title: { text: `${periodTitle} ${title}` },
@@ -35,25 +41,13 @@ const useChartOptions = () => {
             credits: { enabled: false },
             exporting: { enabled: false },
             accessibility: { enabled: false },
-            tooltip: {
-                shared: true,
-                crosshairs: true,
-                followPointer: true,
-                headerFormat: '<span style="font-size: 12px">{point.key}</span><br/>',
-                pointFormatter: function () {
-                    if (this.series.name === 'Fail PPM') {
-                        return `<span style="color:${this.series.color}">${this.series.name}</span>: <b>${Math.round(this.y)}</b><br/>`
-                    }
-                    const value = this.y.toFixed(2)
-                    const formattedValue = value.endsWith('.00') ? value.slice(0, -3) :
-                        value.endsWith('0') ? value.slice(0, -1) : value
-                    return `<span style="color:${this.series.color}">${this.series.name}</span>: <b>${formattedValue}%</b><br/>`
-                }
-            },
             plotOptions: {
                 series: {
                     dataLabels: {
                         enabled: true,
+                        formatter: function () {
+                            return this.y.toLocaleString()
+                        },
                         style: { fontSize: '10px' }
                     }
                 }
@@ -108,7 +102,22 @@ const useChartOptions = () => {
                         }
                     }))
                 }
-            ]
+            ],
+            tooltip: {
+                shared: true,
+                crosshairs: true,
+                followPointer: true,
+                headerFormat: '<span style="font-size: 12px">{point.key}</span><br/>',
+                pointFormatter: function () {
+                    if (this.series.name === 'Fail PPM') {
+                        return `<span style="color:${this.series.color}">${this.series.name}</span>: <b>${formatWithCommas(Math.round(this.y))}</b><br/>`
+                    }
+                    const value = this.y.toFixed(2)
+                    const formattedValue = value.endsWith('.00') ? value.slice(0, -3) :
+                        value.endsWith('0') ? value.slice(0, -1) : value
+                    return `<span style="color:${this.series.color}">${this.series.name}</span>: <b>${formatWithCommas(formattedValue)}%</b><br/>`
+                }
+            }
         }
     }
 
@@ -162,6 +171,11 @@ const useChartOptions = () => {
             exporting: { enabled: false },
             accessibility: { enabled: false },
             chart: { type: 'boxplot' },
+            plotOptions: {
+                boxplot: {
+                    pointWidth: 20
+                }
+            },
             xAxis: {
                 // 將categories設為空字串陣列
                 categories: boxplotData.map(() => ''),
@@ -185,11 +199,6 @@ const useChartOptions = () => {
                             下四分位數: ${this.point.q1.toFixed(2)}%<br/>
                             最小值: ${this.point.low.toFixed(2)}%<br/>`
                 }
-            },
-            plotOptions: {
-                boxplot: {
-                    pointWidth: 20
-                }
             }
         }
     }
@@ -206,20 +215,22 @@ const useChartOptions = () => {
             credits: { enabled: false },
             exporting: { enabled: false },
             accessibility: { enabled: false },
-            tooltip: {
-                shared: true,
-                crosshairs: true
-            },
             plotOptions: {
                 column: {
                     dataLabels: {
                         enabled: true,
+                        formatter: function () {
+                            return this.y.toLocaleString()
+                        },
                         style: { fontSize: '10px' }
                     }
                 },
                 spline: {
                     dataLabels: {
                         enabled: true,
+                        formatter: function () {
+                            return this.y.toLocaleString()
+                        },
                         style: { fontSize: '10px' }
                     }
                 }
@@ -263,7 +274,18 @@ const useChartOptions = () => {
                         }, 0)
                     })
                 }
-            ]
+            ],
+            tooltip: {
+                shared: true,
+                crosshairs: true,
+                formatter: function () {
+                    let s = `<b>${this.x}</b>`
+                    this.points.forEach(point => {
+                        s += `<br/>${point.series.name}: ${point.y.toLocaleString()}` // 在這裡格式化為千分位
+                    })
+                    return s
+                }
+            }
         }
     }
 
