@@ -62,7 +62,7 @@ const StyledTabs = styled(Tabs)({
     }
 })
 
-const AlertTab = styled(Tab)(({ isAlert }) => ({
+const AlertTab = styled(({ isAlert, ...other }) => <Tab {...other} />)(({ isAlert }) => ({
     '&.MuiTab-root': {
         ...(isAlert && {
             backgroundColor: '#ffe6e6',
@@ -232,7 +232,7 @@ const ChartComponent = ({ data, title, sx, showMonthly = false, onColumnClick })
                         events: {
                             click: function (event) {
                                 if (event.point && event.point.category) {
-                                    onColumnClick(title, event.point.category)
+                                    onColumnClick(title, event.point.category, period.toLowerCase())
                                 }
                             }
                         }
@@ -308,7 +308,7 @@ const Dashboard = () => {
     } = state
 
     // 添加點擊事件處理函數
-    const handleColumnClick = useCallback(async (deviceId, date) => {
+    const handleColumnClick = useCallback(async (deviceId, date, period = 'daily') => {
         try {
             const response = await fetch('http://10.11.33.122:1234/thirdAOI.php', {
                 method: 'POST',
@@ -316,7 +316,8 @@ const Dashboard = () => {
                 body: JSON.stringify({
                     action: 'getDetailsByDate',
                     deviceId,
-                    date
+                    date,
+                    periodType: period
                 })
             })
             const data = await response.json()
@@ -555,7 +556,9 @@ const Dashboard = () => {
                                         dataLabels: {
                                             enabled: true,
                                             formatter: function () {
-                                                return this.y.toLocaleString()
+                                                return this.series.name === 'Fail PPM'
+                                                    ? this.y.toLocaleString()
+                                                    : this.y.toLocaleString() + '%'
                                             },
                                             style: { fontSize: '10px' }
                                         }
@@ -567,7 +570,10 @@ const Dashboard = () => {
                                 yAxis: [{
                                     title: { text: 'Rate (%)' },
                                     min: 0,
-                                    max: 100
+                                    max: 100,
+                                    labels: {
+                                        format: '{value}%'
+                                    }
                                 }, {
                                     title: { text: 'PPM' },
                                     opposite: true
@@ -581,7 +587,7 @@ const Dashboard = () => {
                                         .map(machineId => {
                                             const machineData = detailData.data.filter(d => d.Machine_Id === machineId)
                                             const avgFailPpm = parseFloat((machineData.reduce((sum, d) =>
-                                                sum + parseFloat(d.Fail_Ppm), 0) / machineData.length).toFixed(2))
+                                                sum + parseFloat(d.Fail_Ppm), 0) / machineData.length).toFixed(0))
                                             return avgFailPpm
                                         })
                                 }, {
@@ -592,7 +598,7 @@ const Dashboard = () => {
                                         .map(machineId => {
                                             const machineData = detailData.data.filter(d => d.Machine_Id === machineId)
                                             const avgPassRate = parseFloat((machineData.reduce((sum, d) =>
-                                                sum + parseFloat(d.Pass_Rate), 0) / machineData.length).toFixed(2))
+                                                sum + parseFloat(d.Pass_Rate), 0) / machineData.length * 100).toFixed(1))
                                             return avgPassRate
                                         })
                                 }, {
@@ -603,13 +609,20 @@ const Dashboard = () => {
                                         .map(machineId => {
                                             const machineData = detailData.data.filter(d => d.Machine_Id === machineId)
                                             const avgOverkillRate = parseFloat((machineData.reduce((sum, d) =>
-                                                sum + parseFloat(d.Overkill_Rate), 0) / machineData.length).toFixed(2))
+                                                sum + parseFloat(d.Overkill_Rate), 0) / machineData.length * 100).toFixed(1))
                                             return avgOverkillRate
                                         })
                                 }],
                                 tooltip: {
                                     shared: true,
-                                    crosshairs: true
+                                    crosshairs: true,
+                                    formatter: function () {
+                                        let s = `<b>${this.x}</b>`
+                                        this.points.forEach(point => {
+                                            s += `<br/><span style="color:${point.series.color}">${point.series.name}</span>: <b>${point.series.name === 'Fail PPM' ? point.y : point.y + '%'}</b>`
+                                        })
+                                        return s
+                                    }
                                 },
                             }}
                         />
