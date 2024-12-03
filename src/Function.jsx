@@ -40,8 +40,8 @@ function calculateAverages(datas, period = 'daily') {
             periodType,
             date: Array.from(date),
             averageFailPpm: getAverage(Fail_Ppm).toFixed(0),
-            averageOverkillRate: getAverage(Overkill_Rate).toFixed(1),
-            averagePassRate: getAverage(Pass_Rate).toFixed(1),
+            averageOverkillRate: (getAverage(Overkill_Rate) * 100).toFixed(1),
+            averagePassRate: (getAverage(Pass_Rate) * 100).toFixed(1),
         }
     })
 

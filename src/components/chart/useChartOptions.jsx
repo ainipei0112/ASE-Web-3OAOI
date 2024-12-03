@@ -34,7 +34,7 @@ const useChartOptions = () => {
         // 檢查是否為 Daily 圖表且最後一個 Overkill Rate 超過 1%
         const isDaily = periodTitle === 'Daily'
         const lastOverkillRate = periodData[periodData.length - 1]?.averageOverkillRate
-        const isOverThreshold = lastOverkillRate > 1
+        const isOverThreshold = lastOverkillRate > 5
 
         return {
             title: { text: `${periodTitle} Pass & Overkill rate By ${title}` },
@@ -46,7 +46,9 @@ const useChartOptions = () => {
                     dataLabels: {
                         enabled: true,
                         formatter: function () {
-                            return this.y.toLocaleString()
+                            return this.series.name === 'Fail PPM'
+                                ? this.y.toLocaleString()
+                                : this.y.toLocaleString() + '%'
                         },
                         style: { fontSize: '10px' }
                     }

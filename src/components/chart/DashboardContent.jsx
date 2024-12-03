@@ -472,7 +472,7 @@ const Dashboard = () => {
                     {bdList.map((bd, index) => {
                         const bdDataSet = bdData[bd]?.daily || []
                         const lastDataPoint = bdDataSet[bdDataSet.length - 1]
-                        const isOverThreshold = lastDataPoint?.averageOverkillRate > 1
+                        const isOverThreshold = lastDataPoint?.averageOverkillRate > 5
 
                         return (
                             <AlertTab
