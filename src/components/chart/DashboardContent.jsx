@@ -5,11 +5,7 @@ import { useCallback, useContext, useEffect, useMemo, useReducer } from 'react'
 import {
     Box,
     Card,
-    Dialog,
-    DialogTitle,
-    DialogContent,
     Grid,
-    IconButton,
     Tab,
     Tabs,
     Table,
@@ -21,7 +17,6 @@ import {
     Paper
 } from '@mui/material'
 import { styled } from '@mui/system'
-import CloseIcon from '@mui/icons-material/Close'
 
 // 外部套件
 import Highcharts from 'highcharts'
@@ -37,6 +32,7 @@ import { calculateMachineData, calculateAverages, calculateTotals, filterDataByM
 import Loader from '../Loader.jsx'
 import useChartOptions from '../chart/useChartOptions.jsx'
 import CardTitle from '../chart/CardTitle.jsx'
+import MachineStatusDialog from '../chart/MachineStatusDialog.jsx'
 
 // 樣式定義
 const StyledCard = styled(Card)({
@@ -322,7 +318,7 @@ const Dashboard = () => {
             })
             const data = await response.json()
             if (data.success) {
-                dispatch({ type: 'SET_DETAIL_DATA', payload: { deviceId, date, data: data.results } })
+                dispatch({ type: 'SET_DETAIL_DATA', payload: { deviceId, date, period, data: data.results } })
                 dispatch({ type: 'SET_DIALOG_OPEN', payload: true })
             }
         } catch (error) {
@@ -522,113 +518,11 @@ const Dashboard = () => {
             </StyledCard>
 
             {/* By機台作業狀況彈窗 */}
-            <Dialog
+            <MachineStatusDialog
                 open={dialogOpen}
                 onClose={handleClose}
-                maxWidth="md"
-                fullWidth
-            >
-                <DialogTitle>
-                    {`${detailData?.deviceId} - ${detailData?.date} 機台作業狀況`}
-                    <IconButton
-                        onClick={handleClose}
-                        sx={{
-                            position: 'absolute',
-                            right: 8,
-                            top: 8,
-                            color: 'gray',
-                        }}
-                    >
-                        <CloseIcon />
-                    </IconButton>
-                </DialogTitle>
-                <DialogContent>
-                    {detailData && (
-                        <HighchartsReact
-                            highcharts={Highcharts}
-                            options={{
-                                title: { text: 'By 機台作業狀況' },
-                                credits: { enabled: false },
-                                exporting: { enabled: false },
-                                accessibility: { enabled: false },
-                                plotOptions: {
-                                    series: {
-                                        dataLabels: {
-                                            enabled: true,
-                                            formatter: function () {
-                                                return this.series.name === 'Fail PPM'
-                                                    ? this.y.toLocaleString()
-                                                    : this.y.toLocaleString() + '%'
-                                            },
-                                            style: { fontSize: '10px' }
-                                        }
-                                    }
-                                },
-                                xAxis: {
-                                    categories: [...new Set(detailData.data.map(d => d.Machine_Id))].sort()
-                                },
-                                yAxis: [{
-                                    title: { text: 'Rate (%)' },
-                                    min: 0,
-                                    max: 100,
-                                    labels: {
-                                        format: '{value}%'
-                                    }
-                                }, {
-                                    title: { text: 'PPM' },
-                                    opposite: true
-                                }],
-                                series: [{
-                                    name: 'Fail PPM',
-                                    type: 'column',
-                                    yAxis: 1,
-                                    data: [...new Set(detailData.data.map(d => d.Machine_Id))]
-                                        .sort()
-                                        .map(machineId => {
-                                            const machineData = detailData.data.filter(d => d.Machine_Id === machineId)
-                                            const avgFailPpm = parseFloat((machineData.reduce((sum, d) =>
-                                                sum + parseFloat(d.Fail_Ppm), 0) / machineData.length).toFixed(0))
-                                            return avgFailPpm
-                                        })
-                                }, {
-                                    name: 'Pass Rate',
-                                    type: 'spline',
-                                    data: [...new Set(detailData.data.map(d => d.Machine_Id))]
-                                        .sort()
-                                        .map(machineId => {
-                                            const machineData = detailData.data.filter(d => d.Machine_Id === machineId)
-                                            const avgPassRate = parseFloat((machineData.reduce((sum, d) =>
-                                                sum + parseFloat(d.Pass_Rate), 0) / machineData.length * 100).toFixed(1))
-                                            return avgPassRate
-                                        })
-                                }, {
-                                    name: 'Overkill Rate',
-                                    type: 'spline',
-                                    data: [...new Set(detailData.data.map(d => d.Machine_Id))]
-                                        .sort()
-                                        .map(machineId => {
-                                            const machineData = detailData.data.filter(d => d.Machine_Id === machineId)
-                                            const avgOverkillRate = parseFloat((machineData.reduce((sum, d) =>
-                                                sum + parseFloat(d.Overkill_Rate), 0) / machineData.length * 100).toFixed(1))
-                                            return avgOverkillRate
-                                        })
-                                }],
-                                tooltip: {
-                                    shared: true,
-                                    crosshairs: true,
-                                    formatter: function () {
-                                        let s = `<b>${this.x}</b>`
-                                        this.points.forEach(point => {
-                                            s += `<br/><span style="color:${point.series.color}">${point.series.name}</span>: <b>${point.series.name === 'Fail PPM' ? point.y : point.y + '%'}</b>`
-                                        })
-                                        return s
-                                    }
-                                },
-                            }}
-                        />
-                    )}
-                </DialogContent>
-            </Dialog>
+                detailData={detailData}
+            />
         </Box>
     )
 }

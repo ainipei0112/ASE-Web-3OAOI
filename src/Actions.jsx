@@ -43,6 +43,16 @@ const Actions = () => {
         })
     }
 
+    const getBDDetailsByMachineStrip = async (deviceId, machineId, date, period = 'daily') => {
+        return await fetcher('http://10.11.33.122:1234/thirdAOI.php', {
+            action: 'getBDDetailsByMachineStrip',
+            deviceId,
+            machineId,
+            date,
+            periodType: period
+        })
+    }
+
     const sendEmail = async (emailData) => {
         return await fetcher('http://10.11.33.122:1234/thirdAOI.php', { action: 'mailAlert', emailData })
     }
@@ -53,6 +63,7 @@ const Actions = () => {
         searchByCondition,
         exportDataByCondition,
         getDetailsByDate,
+        getBDDetailsByMachineStrip,
         sendEmail,
     }
 }
