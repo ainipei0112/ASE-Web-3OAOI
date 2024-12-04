@@ -39,7 +39,7 @@ import { saveAs } from 'file-saver'
 
 // 自定義套件
 import { AppContext } from '../../Context.jsx'
-import { calculateTotals, calculateAverages, getWeekNumberForDate, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '../../Function'
+import { calculateOperationData, calculateBdData, getWeekNumberForDate, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '../../Function.jsx'
 // import MailDialog from './MailDialog'
 
 // 定義樣式
@@ -143,7 +143,7 @@ const reducer = (state, action) => {
     }
 }
 
-const ChartContent = () => {
+const QueryboardContent = () => {
     const { aoiData, searchByCondition, exportDataByCondition } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
     const {
@@ -262,17 +262,17 @@ const ChartContent = () => {
 
     // 計算平均並整合各週期資料
     const averageData = (threeMonthsData, fiveWeeksData, sevenDaysData) => {
-        const threeMonthsAverage = calculateAverages(threeMonthsData, 'monthly')
-        const fiveWeeksAverage = calculateAverages(fiveWeeksData, 'weekly')
-        const sevenDaysAverage = calculateAverages(sevenDaysData, 'daily')
+        const threeMonthsAverage = calculateBdData(threeMonthsData, 'monthly')
+        const fiveWeeksAverage = calculateBdData(fiveWeeksData, 'weekly')
+        const sevenDaysAverage = calculateBdData(sevenDaysData, 'daily')
         return threeMonthsAverage.concat(fiveWeeksAverage, sevenDaysAverage)
     }
 
     // 計算總值並整合各週期資料
     const sumData = (threeMonthsData, fiveWeeksData, sevenDaysData) => {
-        const threeMonthsTotal = calculateTotals(threeMonthsData, 'monthly')
-        const fiveWeeksTotal = calculateTotals(fiveWeeksData, 'weekly')
-        const sevenDaysTotal = calculateTotals(sevenDaysData, 'daily')
+        const threeMonthsTotal = calculateOperationData(threeMonthsData, 'monthly')
+        const fiveWeeksTotal = calculateOperationData(fiveWeeksData, 'weekly')
+        const sevenDaysTotal = calculateOperationData(sevenDaysData, 'daily')
         return threeMonthsTotal.concat(fiveWeeksTotal, sevenDaysTotal)
     }
 
@@ -554,8 +554,7 @@ const ChartContent = () => {
                 align: 'center',
                 verticalAlign: 'bottom',
                 backgroundColor:
-                    Highcharts.defaultOptions.legend.backgroundColor || // theme
-                    'rgba(255,255,255,0.25)',
+                    Highcharts.defaultOptions.legend.backgroundColor || 'rgba(255,255,255,0.25)',
             },
             // 橫座標軸
             xAxis: {
@@ -809,7 +808,7 @@ const ChartContent = () => {
                     }}
                 >
                     <BarChartIcon />
-                    <span style={{ padding: 10 }}>Chart Report</span>
+                    <span style={{ padding: 10, fontWeight: 'bold', variant: "h6" }}>Chart Report</span>
                 </Box>
                 <Box sx={{ padding: '10px' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
@@ -1049,4 +1048,4 @@ const ChartContent = () => {
     )
 }
 
-export default ChartContent
+export default QueryboardContent

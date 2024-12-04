@@ -28,11 +28,11 @@ NoDataToDisplay(Highcharts)
 
 // 自定義套件
 import { AppContext } from '../../Context.jsx'
-import { calculateMachineData, calculateAverages, calculateTotals, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange } from '../../Function.jsx'
-import Loader from '../Loader.jsx'
-import useChartOptions from '../chart/useChartOptions.jsx'
-import CardTitle from '../chart/CardTitle.jsx'
-import MachineStatusDialog from '../chart/MachineStatusDialog.jsx'
+import { calculateOperationData, calculateBdData, calculateMachineData, filterDataByDateRange, filterDataByWeekRange, filterDataByMonthRange } from '../../Function.jsx'
+import Loader from '../global/Loader.jsx'
+import useChartOptions from './useChartOptions.jsx'
+import CardTitle from './CardTitle.jsx'
+import MachineStatusDialog from './MachineStatusDialog.jsx'
 
 // 樣式定義
 const StyledCard = styled(Card)({
@@ -123,7 +123,7 @@ const reducer = (state, action) => {
     }
 }
 
-// Overall Daily Summary
+// Summary 表格渲染
 const SummaryTable = ({ data }) => {
     const yesterdayData = useMemo(() => {
         // 取得昨天的日期
@@ -210,7 +210,7 @@ const SummaryTable = ({ data }) => {
     )
 }
 
-// 控制 Overall & BD 圖表渲染
+// Overall & BD 圖表渲染
 const ChartComponent = ({ data, title, sx, showMonthly = false, onColumnClick }) => {
     const { createBaseChartOptions } = useChartOptions()
     const periods = showMonthly ? ['Daily', 'Weekly', 'Monthly'] : ['Daily', 'Weekly']
@@ -248,7 +248,7 @@ const ChartComponent = ({ data, title, sx, showMonthly = false, onColumnClick })
     )
 }
 
-// 控制作業數量圖表渲染
+// 作業數量圖表渲染
 const OperationChartComponent = ({ data, title, sx, showMonthly = false }) => {
     const { createOperationChartOptions } = useChartOptions()
     const periods = showMonthly ? ['Daily', 'Weekly', 'Monthly'] : ['Daily', 'Weekly']
@@ -268,7 +268,7 @@ const OperationChartComponent = ({ data, title, sx, showMonthly = false }) => {
     )
 }
 
-// 控制機台圖表渲染
+// 機台圖表渲染
 const MachineChartComponent = ({ data, title, sx, showMonthly = false }) => {
     const { createMachineChartOptions } = useChartOptions()
     const periods = showMonthly ? ['Daily', 'Weekly', 'Monthly'] : ['Daily', 'Weekly']
@@ -288,7 +288,7 @@ const MachineChartComponent = ({ data, title, sx, showMonthly = false }) => {
     )
 }
 
-const Dashboard = () => {
+const DashboardContent = () => {
     const { aoiData } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
     const {
@@ -303,8 +303,8 @@ const Dashboard = () => {
         detailData
     } = state
 
-    // 添加點擊事件處理函數
-    const handleColumnClick = useCallback(async (deviceId, date, period = 'daily') => {
+    // BD圖點擊事件
+    const handleBDColumnClick = useCallback(async (deviceId, date, period = 'daily') => {
         try {
             const response = await fetch('http://10.11.33.122:1234/thirdAOI.php', {
                 method: 'POST',
@@ -326,24 +326,25 @@ const Dashboard = () => {
         }
     }, [])
 
-    // 關閉查詢對話框
+    // 關閉彈窗
     const handleClose = () => {
         dispatch({ type: 'SET_DIALOG_OPEN', payload: false })
     }
 
-    const renderChart = (data, title, showMonthly) => data && (
-        <ChartComponent
-            data={data}
-            title={title}
-            sx={{ padding: 2 }}
-            showMonthly={showMonthly}
-            onColumnClick={handleColumnClick}
-        />
-    )
+    // 資料處理
+    const overallData = useMemo(() => ({
+        daily: calculateBdData(filterDataByDateRange(aoiData, 7), 'daily'),
+        weekly: calculateBdData(filterDataByWeekRange(aoiData, 5), 'weekly'),
+        monthly: calculateBdData(filterDataByMonthRange(aoiData, 3), 'monthly')
+    }), [aoiData])
 
-    const GetUniqueSortedList = (key, data) => useMemo(() =>
-        [...new Set(data.map(item => item[key]))].sort(), [data, key])
+    const operationData = useMemo(() => ({
+        daily: calculateOperationData(filterDataByDateRange(aoiData, 7), 'daily'),
+        weekly: calculateOperationData(filterDataByWeekRange(aoiData, 5), 'weekly'),
+        monthly: calculateOperationData(filterDataByMonthRange(aoiData, 3), 'monthly')
+    }), [aoiData])
 
+    const GetUniqueSortedList = (key, data) => useMemo(() => [...new Set(data.map(item => item[key]))].sort(), [data, key])
     const bdList = GetUniqueSortedList('Device_Id', aoiData)
     const machineList = GetUniqueSortedList('Machine_Id', aoiData)
 
@@ -356,9 +357,9 @@ const Dashboard = () => {
 
                 const processData = (data, key, type) => ({
                     [key]: type === 'bd' ? {
-                        daily: calculateAverages(filterDataByDateRange(data, 7), 'daily'),
-                        weekly: calculateAverages(filterDataByWeekRange(data, 5), 'weekly'),
-                        monthly: calculateAverages(filterDataByMonthRange(data, 3), 'monthly')
+                        daily: calculateBdData(filterDataByDateRange(data, 7), 'daily'),
+                        weekly: calculateBdData(filterDataByWeekRange(data, 5), 'weekly'),
+                        monthly: calculateBdData(filterDataByMonthRange(data, 3), 'monthly')
                     } : {
                         daily: calculateMachineData(filterDataByDateRange(data, 1)),
                         weekly: calculateMachineData(filterDataByWeekRange(data, 1)),
@@ -390,18 +391,7 @@ const Dashboard = () => {
         return () => { mounted = false }
     }, [aoiData, bdList, machineList])
 
-    const overallData = useMemo(() => ({
-        daily: calculateAverages(filterDataByDateRange(aoiData, 7), 'daily'),
-        weekly: calculateAverages(filterDataByWeekRange(aoiData, 5), 'weekly'),
-        monthly: calculateAverages(filterDataByMonthRange(aoiData, 3), 'monthly')
-    }), [aoiData])
-
-    const operationData = useMemo(() => ({
-        daily: calculateTotals(filterDataByDateRange(aoiData, 7), 'daily'),
-        weekly: calculateTotals(filterDataByWeekRange(aoiData, 5), 'weekly'),
-        monthly: calculateTotals(filterDataByMonthRange(aoiData, 3), 'monthly')
-    }), [aoiData])
-
+    // 載入動畫
     if (isLoading || !chartsReady) return <Loader />
 
     return (
@@ -423,7 +413,13 @@ const Dashboard = () => {
                         payload: e.target.checked
                     })}
                 />
-                {renderChart(overallData, 'Overall', showMonthly)}
+                <ChartComponent
+                    data={overallData}
+                    title={'Overall'}
+                    sx={{ padding: 2 }}
+                    showMonthly={showMonthly}
+                    onColumnClick={handleBDColumnClick}
+                />
             </StyledCard>
 
             {/* Operation Card */}
@@ -480,9 +476,13 @@ const Dashboard = () => {
                         )
                     })}
                 </StyledTabs>
-                {renderChart(bdData[bdList[selectedBdTab]],
-                    `${bdList[selectedBdTab]}`,
-                    showMonthly)}
+                <ChartComponent
+                    data={bdData[bdList[selectedBdTab]]}
+                    title={`${bdList[selectedBdTab]}`}
+                    sx={{ padding: 2 }}
+                    showMonthly={showMonthly}
+                    onColumnClick={handleBDColumnClick}
+                />
             </StyledCard>
 
             {/* M/C Card */}
@@ -527,4 +527,4 @@ const Dashboard = () => {
     )
 }
 
-export default Dashboard
+export default DashboardContent

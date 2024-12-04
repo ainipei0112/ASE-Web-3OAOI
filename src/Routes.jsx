@@ -1,11 +1,11 @@
-// 匯入 Navigate 函式庫，這是一個來導向不同頁面的函式庫。
+// Navigate：導向不同頁面的函式庫。
 import { Navigate } from 'react-router-dom'
-import MainLayout from './components/MainLayout' // 整個頁框
+import MainLayout from './components/global/MainLayout' // 整個頁框
 
 // 導入頁面
 import NotFound from './pages/NotFound'
-import Chart from './pages/Chart'
-import Dashboard from './pages/Dashboard'
+import QueryBoard from './pages/QueryBoard'
+import DashBoard from './pages/DashBoard'
 
 // 儲存路由資訊
 const Routes = [
@@ -13,9 +13,9 @@ const Routes = [
         path: '/',
         element: <MainLayout />,
         children: [
-            { path: 'Dashboard', element: <Dashboard /> },
-            { path: 'Queryboard', element: <Chart /> },
-            { path: '/', element: <Navigate to='/Dashboard' /> },
+            { path: 'DashBoard', element: <DashBoard /> },
+            { path: 'QueryBoard', element: <QueryBoard /> },
+            { path: '/', element: <Navigate to='/DashBoard' /> },
             { path: '404', element: <NotFound /> },
             { path: '*', element: <Navigate to='/404' /> },
         ],

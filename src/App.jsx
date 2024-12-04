@@ -1,7 +1,7 @@
 import { useRoutes } from 'react-router-dom' // 用{}只帶入需要用的模組 不全部載入
 import { ThemeProvider } from '@mui/material'
-import GlobalStyles from './components/GlobalStyles'
-import theme from './theme'
+import GlobalStyles from './components/global/GlobalStyles'
+import theme from './components/global/Theme'
 import Routes from './Routes'
 import Actions from './Actions'
 import { Provider } from './Context' // 用Provider可以將數據資料在全域共享，不用一層一層傳參數

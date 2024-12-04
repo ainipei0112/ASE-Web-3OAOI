@@ -1,12 +1,12 @@
 import { Helmet } from 'react-helmet'
 import { Box, Container } from '@mui/material'
-import DashboardContent from '../components/chart/DashboardContent'
+import DashboardContent from '../components/dashboard/DashboardContent'
 
-const Dashboard = () => {
+const DashBoard = () => {
     return (
         <>
             <Helmet>
-                <title>Dashboard | 3/O AOI</title>
+                <title>DashBoard | 3/O AOI</title>
             </Helmet>
             <Box
                 sx={{
@@ -24,4 +24,4 @@ const Dashboard = () => {
     )
 }
 
-export default Dashboard
+export default DashBoard

@@ -1,15 +1,20 @@
-// 計算平均值的函數
-function calculateAverages(datas, period = 'daily') {
+// BD指標平均值：Fail_Ppm、Overkill_Rate、Pass_Rate
+function calculateBdData(datas, period = 'daily') {
     const map = {}
     const getKey = (date, isWeekly, isMonthly) => {
+        // 轉換月份簡碼作為key：Aug
         if (isMonthly) {
             const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
             const monthIndex = parseInt(date.substring(5, 7)) - 1
             return monthNames[monthIndex]
-        } // 轉換月份簡碼作為key：Aug
-        if (isWeekly) return getWeekNumberForDate(date) // 取得週數作為key：W33
-        return date.substring(0, 10) // 使用日期作為key：2024-08-16
+        }
+
+        // 取得週次作為key：W33
+        if (isWeekly) return getWeekNumberForDate(date)
+
+        // 取得日期前10碼作為key：2024-08-16
+        return date.substring(0, 10)
     }
 
     // 根據key判別當前資料週期
@@ -56,8 +61,8 @@ function calculateAverages(datas, period = 'daily') {
     return calculatedAverages
 }
 
-// 計算總計值的函數
-function calculateTotals(datas, period = 'daily') {
+// 作業數量指標總計值：Aoi_Defect、Fail_Count、Pass_Count
+function calculateOperationData(datas, period = 'daily') {
     const map = {}
     const getKey = (date, isWeekly, isMonthly) => {
         if (isMonthly) {
@@ -65,9 +70,9 @@ function calculateTotals(datas, period = 'daily') {
                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
             const monthIndex = parseInt(date.substring(5, 7)) - 1
             return monthNames[monthIndex]
-        } // 轉換月份簡碼作為key：Aug
-        if (isWeekly) return getWeekNumberForDate(date) // 取得週數作為key：W46
-        return date.substring(0, 10) // 使用日期作為key：2024-11-12
+        }
+        if (isWeekly) return getWeekNumberForDate(date)
+        return date.substring(0, 10)
     }
 
     // 根據key判別當前資料週期
@@ -75,7 +80,7 @@ function calculateTotals(datas, period = 'daily') {
         const key = getKey(Ao_Time_Start, period === 'weekly', period === 'monthly')
         const dateToAdd = Ao_Time_Start.substring(0, 10)
 
-        // 初始化map[key]
+        // 初始化
         if (!map[key]) {
             map[key] = {
                 date: new Set(),
@@ -85,7 +90,7 @@ function calculateTotals(datas, period = 'daily') {
             }
         }
 
-        // 初始化map[key][Drawing_No]和map[key][Machine_Id]如果不存在
+        // 初始化 map[key][Drawing_No] & map[key][Machine_Id]
         const initializeEntry = (entry, id) => {
             if (!entry[id]) {
                 entry[id] = {
@@ -113,14 +118,11 @@ function calculateTotals(datas, period = 'daily') {
         updateTotals(map[key].machine[Machine_Id], Aoi_Defect, Fail_Count, Pass_Count)
     })
 
-    // 計算每組資料並輸出
+    // 計算並排序每組資料
     const calculatedSums = Object.keys(map).map((key) => {
         const { date, periodType, machine, bondingDrawing } = map[key]
         return { key, periodType, date: Array.from(date), machine, bondingDrawing }
-    })
-
-    // 排序計算結果
-    calculatedSums.sort((a, b) => {
+    }).sort((a, b) => {
         if (period === 'weekly') {
             return a.key.localeCompare(b.key)
         } else {
@@ -131,7 +133,60 @@ function calculateTotals(datas, period = 'daily') {
     return calculatedSums
 }
 
-// 濾出前幾月的資料
+// 機台盒鬚圖資料
+function calculateMachineData(datas, period = 'daily') {
+    const map = {}
+    const getKey = (date, isWeekly, isMonthly) => {
+        if (isMonthly) {
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+            const monthIndex = parseInt(date.substring(5, 7)) - 1
+            return monthNames[monthIndex]
+        }
+        if (isWeekly) return getWeekNumberForDate(date)
+        return date.substring(0, 10)
+    }
+
+    datas.forEach(({ Ao_Time_Start, Drawing_No, Strip_No, Overkill_Rate }) => {
+        const key = getKey(Ao_Time_Start, period === 'weekly', period === 'monthly')
+
+        // 初始化
+        if (!map[Drawing_No]) {
+            map[Drawing_No] = {
+                drawingNo: Drawing_No,
+                results: []
+            }
+        }
+
+        // 更新資料集合
+        map[Drawing_No].results.push({
+            key: key,
+            periodType: period,
+            stripNo: Strip_No,
+            overkillRate: parseFloat(Overkill_Rate)
+        })
+    })
+
+    // 計算並排序每組資料
+    const calculatedData = Object.entries(map).map(([drawingNo, data]) => {
+        data.results.sort((a, b) => {
+            if (period === 'weekly') {
+                return a.key.localeCompare(b.key)
+            } else {
+                return a.key.localeCompare(b.key)
+            }
+        })
+
+        return {
+            drawingNo,
+            results: data.results
+        }
+    })
+
+    return calculatedData
+}
+
+// 篩選出指定月份範圍內的資料
 function filterDataByMonthRange(datas, months) {
     const now = new Date()
     const currentMonth = now.getMonth() + 1 // 獲取當前月份 (1-12)
@@ -152,7 +207,7 @@ function filterDataByMonthRange(datas, months) {
     })
 }
 
-// 濾出前幾週的資料
+// 篩選出指定週數範圍內的資料
 function filterDataByWeekRange(datas, weeks) {
     const now = new Date()
     now.setHours(0, 0, 0, 0) // 將時間設置為當天開始
@@ -174,7 +229,7 @@ function filterDataByWeekRange(datas, weeks) {
     }))
 }
 
-// 濾出前幾日的資料
+// 篩選出指定日期範圍內的資料
 function filterDataByDateRange(datas, days) {
     const now = new Date()
     now.setHours(0, 0, 0, 0) // 將時間設置為當天開始
@@ -187,58 +242,6 @@ function filterDataByDateRange(datas, days) {
     })
 }
 
-// 濾出機台盒鬚圖的資料
-function calculateMachineData(datas, period = 'daily') {
-    const map = {}
-    const getDateKey = (date, isWeekly, isMonthly) => {
-        if (isMonthly) {
-            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-            const monthIndex = parseInt(date.substring(5, 7)) - 1
-            return monthNames[monthIndex]
-        }
-        if (isWeekly) return getWeekNumberForDate(date)
-        return date.substring(0, 10)
-    }
-
-    datas.forEach(({ Ao_Time_Start, Drawing_No, Strip_No, Overkill_Rate }) => {
-        if (!map[Drawing_No]) {
-            map[Drawing_No] = {
-                drawingNo: Drawing_No,
-                results: []
-            }
-        }
-
-        const dateKey = getDateKey(Ao_Time_Start, period === 'weekly', period === 'monthly')
-
-        map[Drawing_No].results.push({
-            key: dateKey,
-            periodType: period,
-            stripNo: Strip_No,
-            overkillRate: parseFloat(Overkill_Rate)
-        })
-    })
-
-    const calculatedData = Object.entries(map).map(([drawingNo, data]) => {
-        // Sort results based on date
-        data.results.sort((a, b) => {
-            if (period === 'weekly') {
-                return a.key.localeCompare(b.key)
-            } else {
-                // For daily and monthly, sort by the key
-                return a.key.localeCompare(b.key)
-            }
-        })
-
-        return {
-            drawingNo,
-            results: data.results
-        }
-    })
-
-    return calculatedData
-}
-
 // 計算出日期所屬的週數
 function getWeekNumberForDate(dateString) {
     const date = new Date(dateString)
@@ -249,4 +252,4 @@ function getWeekNumberForDate(dateString) {
     return 'W' + weekNumber
 }
 
-export { calculateAverages, calculateTotals, getWeekNumberForDate, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange, calculateMachineData }
+export { calculateBdData, calculateOperationData, calculateMachineData, filterDataByMonthRange, filterDataByWeekRange, filterDataByDateRange, getWeekNumberForDate }

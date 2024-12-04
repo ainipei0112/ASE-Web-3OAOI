@@ -1,12 +1,12 @@
 import { Helmet } from 'react-helmet'
 import { Box, Container } from '@mui/material'
-import ChartContent from '../components/chart/ChartContent'
+import QueryboardContent from '../components/queryboard/QueryboardContent'
 
-const Chart = () => {
+const QueryBoard = () => {
     return (
         <>
             <Helmet>
-                <title>Chart | 3/O AOI</title>
+                <title>QueryBoard | 3/O AOI</title>
             </Helmet>
             <Box
                 sx={{
@@ -16,7 +16,7 @@ const Chart = () => {
             >
                 <Container maxWidth={false}>
                     <Box sx={{ pt: 1 }}>
-                        <ChartContent />
+                        <QueryboardContent />
                     </Box>
                 </Container>
             </Box>
@@ -24,4 +24,4 @@ const Chart = () => {
     )
 }
 
-export default Chart
+export default QueryBoard
