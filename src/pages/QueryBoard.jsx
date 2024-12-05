@@ -1,5 +1,10 @@
+// React套件
 import { Helmet } from 'react-helmet'
+
+// MUI套件
 import { Box, Container } from '@mui/material'
+
+// 自定義套件
 import QueryboardContent from '../components/queryboard/QueryboardContent'
 
 const QueryBoard = () => {

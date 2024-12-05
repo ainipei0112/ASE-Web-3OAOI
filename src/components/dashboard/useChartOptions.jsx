@@ -31,7 +31,7 @@ const useChartOptions = () => {
             return createNoDataConfig(periodTitle, title)
         }
 
-        // 檢查是否為 Daily 圖表且最後一個 Overkill Rate 超過 1%
+        // 檢查是否為 Daily 圖表且最後一個 Overkill Rate 超過 5%
         const isDaily = periodTitle === 'Daily'
         const lastOverkillRate = periodData[periodData.length - 1]?.averageOverkillRate
         const isOverThreshold = lastOverkillRate > 5

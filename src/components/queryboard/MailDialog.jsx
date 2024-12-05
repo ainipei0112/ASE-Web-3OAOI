@@ -1,6 +1,20 @@
+// React套件
 import { useState } from 'react'
+
+// MUI套件
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField,
+    Button,
+    Checkbox,
+    FormControlLabel
+} from '@mui/material'
+
+// 外部套件
 import PropTypes from 'prop-types' // 引入 prop-types
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Checkbox, FormControlLabel } from '@mui/material'
 
 const MailDialog = ({ open, onClose, onSend, chartTitle }) => {
     const [subject, setSubject] = useState(`3/O AOI DashBoard - ${chartTitle}`)

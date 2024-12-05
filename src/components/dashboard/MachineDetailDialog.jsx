@@ -1,3 +1,4 @@
+// MUI套件
 import {
     Dialog,
     DialogTitle,
@@ -29,11 +30,11 @@ const StyledTableCell = styled(TableCell)({
     wordBreak: 'break-word',
 })
 
-const HighlightedTableCell = styled(StyledTableCell)(({ theme }) => ({
-    padding: '8px 16px',
-    whiteSpace: 'normal',
-    wordBreak: 'break-word',
-    color: theme.palette.error.main
+const HighlightedTableRow = styled(TableRow)(({ theme }) => ({
+    backgroundColor: '#ffebee',
+    '& .MuiTableCell-root': {
+        color: theme.palette.error.main
+    }
 }))
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
@@ -91,22 +92,33 @@ const MachineDetailDialog = ({ open, onClose, machineDetails, deviceId, machineI
                         </TableHead>
                         <TableBody>
                             {sortedDetails?.map((row, index) => (
-                                <StyledTableRow key={index}>
-                                    <StyledTableCell>{row.Ao_Time_Start}</StyledTableCell>
-                                    <StyledTableCell>{row.Lot_No}</StyledTableCell>
-                                    <StyledTableCell>{row.Strip_No}</StyledTableCell>
-                                    <StyledTableCell>{row.Aoi_Defect}</StyledTableCell>
-                                    <StyledTableCell>{row.Pass_Count}</StyledTableCell>
-                                    <StyledTableCell>{row.Fail_Count}</StyledTableCell>
-                                    <StyledTableCell>{(row.Pass_Rate * 100).toFixed(1)}%</StyledTableCell>
-                                    {row.Overkill_Rate > 0.05 ? (
-                                        <HighlightedTableCell>{(row.Overkill_Rate * 100).toFixed(1)}%</HighlightedTableCell>
-                                    ) : (
+                                row.Overkill_Rate > 0.05 ? (
+                                    <HighlightedTableRow key={index}>
+                                        <StyledTableCell>{row.Ao_Time_Start}</StyledTableCell>
+                                        <StyledTableCell>{row.Lot_No}</StyledTableCell>
+                                        <StyledTableCell>{row.Strip_No}</StyledTableCell>
+                                        <StyledTableCell>{row.Aoi_Defect}</StyledTableCell>
+                                        <StyledTableCell>{row.Pass_Count}</StyledTableCell>
+                                        <StyledTableCell>{row.Fail_Count}</StyledTableCell>
+                                        <StyledTableCell>{(row.Pass_Rate * 100).toFixed(1)}%</StyledTableCell>
                                         <StyledTableCell>{(row.Overkill_Rate * 100).toFixed(1)}%</StyledTableCell>
-                                    )}
-                                    <StyledTableCell>{row.Machine_Id}</StyledTableCell>
-                                    <StyledTableCell>{row.Drawing_No}</StyledTableCell>
-                                </StyledTableRow>
+                                        <StyledTableCell>{row.Machine_Id}</StyledTableCell>
+                                        <StyledTableCell>{row.Drawing_No}</StyledTableCell>
+                                    </HighlightedTableRow>
+                                ) : (
+                                    <StyledTableRow key={index}>
+                                        <StyledTableCell>{row.Ao_Time_Start}</StyledTableCell>
+                                        <StyledTableCell>{row.Lot_No}</StyledTableCell>
+                                        <StyledTableCell>{row.Strip_No}</StyledTableCell>
+                                        <StyledTableCell>{row.Aoi_Defect}</StyledTableCell>
+                                        <StyledTableCell>{row.Pass_Count}</StyledTableCell>
+                                        <StyledTableCell>{row.Fail_Count}</StyledTableCell>
+                                        <StyledTableCell>{(row.Pass_Rate * 100).toFixed(1)}%</StyledTableCell>
+                                        <StyledTableCell>{(row.Overkill_Rate * 100).toFixed(1)}%</StyledTableCell>
+                                        <StyledTableCell>{row.Machine_Id}</StyledTableCell>
+                                        <StyledTableCell>{row.Drawing_No}</StyledTableCell>
+                                    </StyledTableRow>
+                                )
                             ))}
                         </TableBody>
                     </Table>

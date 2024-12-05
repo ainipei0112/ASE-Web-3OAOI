@@ -1,10 +1,17 @@
+// React套件
 import { useRoutes } from 'react-router-dom' // 用{}只帶入需要用的模組 不全部載入
+
+// MUI套件
 import { ThemeProvider } from '@mui/material'
+
+// 自定義套件
 import GlobalStyles from './components/global/GlobalStyles'
 import theme from './components/global/Theme'
+
+// 自定義套件
 import Routes from './Routes'
 import Actions from './Actions'
-import { Provider } from './Context' // 用Provider可以將數據資料在全域共享，不用一層一層傳參數
+import { Provider } from './Context' // 用Provider可以將數據資料在全域共享，不用層層傳參數，避免argument drilling。
 
 const App = () => {
     const data = Actions() // 把Action裡API傳輸的資料作為參數傳到Provider

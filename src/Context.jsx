@@ -1,4 +1,3 @@
-// 匯入 React 函式庫，這是一個來建立 UI 的函式庫。
 import React from 'react'
 
 export const AppContext = React.createContext()

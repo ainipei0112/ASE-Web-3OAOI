@@ -1,5 +1,7 @@
-// Navigate：導向不同頁面的函式庫。
-import { Navigate } from 'react-router-dom'
+// React套件
+import { Navigate } from 'react-router-dom' // 導向不同頁面的函式庫
+
+// 自定義套件
 import MainLayout from './components/global/MainLayout' // 整個頁框
 
 // 導入頁面
