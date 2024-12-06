@@ -144,7 +144,7 @@ const reducer = (state, action) => {
 }
 
 const QueryboardContent = () => {
-    const { aoiData, searchByCondition, exportDataByCondition } = useContext(AppContext)
+    const { aoiData, getDataByBDOrMachine, exportDataByBDOrMachine } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
     const {
         chartType,
@@ -192,7 +192,7 @@ const QueryboardContent = () => {
 
     // 提交查詢條件
     const handleQuery = async () => {
-        const searchData = await searchByCondition(selectedBD, selectedMachine)
+        const searchData = await getDataByBDOrMachine(selectedBD, selectedMachine)
         const { threeMonthsData, fiveWeeksData, sevenDaysData } = filterData(searchData)
         let combinedData
 
@@ -239,7 +239,7 @@ const QueryboardContent = () => {
 
     // 匯出查詢資料
     const handleExport = async () => {
-        const exportExcel = await exportDataByCondition(selectedBD, selectedMachine)
+        const exportExcel = await exportDataByBDOrMachine(selectedBD, selectedMachine)
         let fileName = '3rdAoiData_(Security C)' // 預設檔名
         if (selectedBD && selectedMachine) {
             fileName = `${selectedBD}_${selectedMachine}_${fileName}`

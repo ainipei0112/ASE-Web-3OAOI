@@ -1,5 +1,5 @@
 // React套件
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 
 // MUI套件
 import {
@@ -15,9 +15,11 @@ import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 
 // 自定義套件
+import { AppContext } from '../../Context.jsx'
 import MachineDetailDialog from './MachineDetailDialog'
 
 const MachineStatusDialog = ({ open, onClose, detailData }) => {
+    const { getBDDetailsByMachineStrip } = useContext(AppContext)
     const [subDialogOpen, setSubDialogOpen] = useState(false)
     const [machineDetails, setMachineDetails] = useState([])
     const [selectedMachine, setSelectedMachine] = useState(null)
@@ -26,23 +28,10 @@ const MachineStatusDialog = ({ open, onClose, detailData }) => {
         if (event.point) {
             const machineId = event.point.category
             try {
-                const response = await fetch('http://10.11.33.122:1234/thirdAOI.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'getBDDetailsByMachineStrip',
-                        deviceId: detailData.deviceId,
-                        machineId: machineId,
-                        date: detailData.date,
-                        periodType: detailData.period
-                    })
-                })
-                const data = await response.json()
-                if (data.success) {
-                    setMachineDetails(data.results)
-                    setSelectedMachine(machineId)
-                    setSubDialogOpen(true)
-                }
+                const data = await getBDDetailsByMachineStrip(detailData.deviceId, machineId, detailData.date, detailData.period)
+                setMachineDetails(data)
+                setSelectedMachine(machineId)
+                setSubDialogOpen(true)
             } catch (error) {
                 console.error('Error fetching machine details:', error)
             }

@@ -33,6 +33,7 @@ import Loader from '../global/Loader.jsx'
 import useChartOptions from './useChartOptions.jsx'
 import CardTitle from './CardTitle.jsx'
 import MachineStatusDialog from './MachineStatusDialog.jsx'
+import BoxPlotDialog from './BoxPlotDialog'
 
 // 樣式定義
 const StyledCard = styled(Card)({
@@ -95,7 +96,9 @@ const initialState = {
     chartsReady: false,
     showMonthly: false,
     dialogOpen: false,
-    detailData: null
+    detailData: null,
+    boxPlotDialogOpen: false,
+    boxPlotDetailData: null
 }
 
 const reducer = (state, action) => {
@@ -118,6 +121,10 @@ const reducer = (state, action) => {
             return { ...state, dialogOpen: action.payload }
         case 'SET_DETAIL_DATA':
             return { ...state, detailData: action.payload }
+        case 'SET_BOXPLOT_DIALOG_OPEN':
+            return { ...state, boxPlotDialogOpen: action.payload }
+        case 'SET_BOXPLOT_DETAIL_DATA':
+            return { ...state, boxPlotDetailData: action.payload }
         default:
             return state
     }
@@ -269,27 +276,49 @@ const OperationChartComponent = ({ data, title, sx, showMonthly = false }) => {
 }
 
 // 機台圖表渲染
-const MachineChartComponent = ({ data, title, sx, showMonthly = false }) => {
+const MachineChartComponent = ({ data, title, sx, showMonthly = false, onColumnClick }) => {
     const { createMachineChartOptions } = useChartOptions()
     const periods = showMonthly ? ['Daily', 'Weekly', 'Monthly'] : ['Daily', 'Weekly']
     const gridSize = showMonthly ? 4 : 6
 
     return (
         <ChartContainer container spacing={2} sx={sx}>
-            {periods.map((period) => (
-                <Grid item xs={12} md={gridSize} key={period}>
-                    <HighchartsReact
-                        highcharts={Highcharts}
-                        options={createMachineChartOptions(data[period.toLowerCase()], period, title)}
-                    />
-                </Grid>
-            ))}
+            {periods.map((period) => {
+                const options = createMachineChartOptions(data[period.toLowerCase()], period, title)
+                // 添加盒鬚圖的點擊事件
+                if (options.series?.[0]) {
+                    options.plotOptions.series = {
+                        ...options.plotOptions.series,
+                        events: {
+                            click: function (event) {
+                                const drawingNo = event.point.series.name // 從 series.name 獲取 drawingNo
+                                if (drawingNo) {
+                                    // 傳遞機台 ID 和 drawingNo
+                                    onColumnClick(
+                                        drawingNo,
+                                        title.split(' ')[1], // machineId
+                                        period.toLowerCase()
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                return (
+                    <Grid item xs={12} md={gridSize} key={period}>
+                        <HighchartsReact
+                            highcharts={Highcharts}
+                            options={options}
+                        />
+                    </Grid>
+                )
+            })}
         </ChartContainer>
     )
 }
 
 const DashboardContent = () => {
-    const { aoiData } = useContext(AppContext)
+    const { aoiData, getDetailsByDate, getMachineDetailsByBD } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
     const {
         bdData,
@@ -303,33 +332,69 @@ const DashboardContent = () => {
         detailData
     } = state
 
-    // BD圖點擊事件
+    // BD柱狀圖點擊事件
     const handleBDColumnClick = useCallback(async (deviceId, date, period = 'daily') => {
         try {
-            const response = await fetch('http://10.11.33.122:1234/thirdAOI.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'getDetailsByDate',
-                    deviceId,
-                    date,
-                    periodType: period
-                })
-            })
-            const data = await response.json()
-            if (data.success) {
-                dispatch({ type: 'SET_DETAIL_DATA', payload: { deviceId, date, period, data: data.results } })
-                dispatch({ type: 'SET_DIALOG_OPEN', payload: true })
-            }
+            const data = await getDetailsByDate(deviceId, date, period)
+            dispatch({ type: 'SET_DETAIL_DATA', payload: { deviceId, date, period, data } })
+            dispatch({ type: 'SET_DIALOG_OPEN', payload: true })
         } catch (error) {
             console.error('Error fetching details:', error)
         }
-    }, [])
+    }, [getDetailsByDate])
+
+    // M/C盒鬚圖點擊事件
+    const handleMachineColumnClick = useCallback(async (drawingNo, machineId, period) => {
+        try {
+            const data = await getMachineDetailsByBD(drawingNo, machineId, period)
+            dispatch({
+                type: 'SET_BOXPLOT_DETAIL_DATA',
+                payload: {
+                    deviceId: drawingNo,
+                    machineId,
+                    period,
+                    data
+                }
+            })
+            dispatch({ type: 'SET_BOXPLOT_DIALOG_OPEN', payload: true })
+        } catch (error) {
+            console.error('Error fetching machine details:', error)
+        }
+    }, [getMachineDetailsByBD])
 
     // 關閉彈窗
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         dispatch({ type: 'SET_DIALOG_OPEN', payload: false })
-    }
+    }, [])
+
+    // 關閉盒鬚圖彈窗
+    const handleBoxPlotClose = useCallback(() => {
+        dispatch({ type: 'SET_BOXPLOT_DIALOG_OPEN', payload: false })
+    }, [])
+
+    // 控制月報表按鈕顯示
+    const handleSwitchChange = useCallback((e) => {
+        dispatch({
+            type: 'SET_SHOW_MONTHLY',
+            payload: e.target.checked
+        })
+    }, [])
+
+    // 控制選擇的BD Tab
+    const handleBdTabChange = useCallback((e, newValue) => {
+        dispatch({
+            type: 'SET_SELECTED_BD_TAB',
+            payload: newValue
+        })
+    }, [])
+
+    // 控制選擇的機台 Tab
+    const handleMachineTabChange = useCallback((e, newValue) => {
+        dispatch({
+            type: 'SET_SELECTED_MACHINE_TAB',
+            payload: newValue
+        })
+    }, [])
 
     // 資料處理
     const overallData = useMemo(() => ({
@@ -408,17 +473,14 @@ const DashboardContent = () => {
                     title="Overall"
                     showSwitch={true}
                     switchChecked={showMonthly}
-                    onSwitchChange={(e) => dispatch({
-                        type: 'SET_SHOW_MONTHLY',
-                        payload: e.target.checked
-                    })}
+                    onSwitchChange={handleSwitchChange}
                 />
                 <ChartComponent
                     data={overallData}
                     title={'Overall'}
                     sx={{ padding: 2 }}
                     showMonthly={showMonthly}
-                    onColumnClick={handleBDColumnClick}
+                    onColumnClick={null}
                 />
             </StyledCard>
 
@@ -428,10 +490,7 @@ const DashboardContent = () => {
                     title="作業數量"
                     showSwitch={true}
                     switchChecked={showMonthly}
-                    onSwitchChange={(e) => dispatch({
-                        type: 'SET_SHOW_MONTHLY',
-                        payload: e.target.checked
-                    })}
+                    onSwitchChange={handleSwitchChange}
                 />
                 <OperationChartComponent
                     data={operationData}
@@ -447,19 +506,13 @@ const DashboardContent = () => {
                     title="By B/D"
                     showSwitch={true}
                     switchChecked={showMonthly}
-                    onSwitchChange={(e) => dispatch({
-                        type: 'SET_SHOW_MONTHLY',
-                        payload: e.target.checked
-                    })}
+                    onSwitchChange={handleSwitchChange}
                 />
                 <StyledTabs
                     scrollButtons="auto"
                     variant="scrollable"
                     value={selectedBdTab}
-                    onChange={(e, newValue) => dispatch({
-                        type: 'SET_SELECTED_BD_TAB',
-                        payload: newValue
-                    })}
+                    onChange={handleBdTabChange}
                 >
                     {bdList.map((bd, index) => {
                         const bdDataSet = bdData[bd]?.daily || []
@@ -491,19 +544,13 @@ const DashboardContent = () => {
                     title="By M/C"
                     showSwitch={true}
                     switchChecked={showMonthly}
-                    onSwitchChange={(e) => dispatch({
-                        type: 'SET_SHOW_MONTHLY',
-                        payload: e.target.checked
-                    })}
+                    onSwitchChange={handleSwitchChange}
                 />
                 <StyledTabs
                     scrollButtons="auto"
                     variant="scrollable"
                     value={selectedMachineTab}
-                    onChange={(e, newValue) => dispatch({
-                        type: 'SET_SELECTED_MACHINE_TAB',
-                        payload: newValue
-                    })}
+                    onChange={handleMachineTabChange}
                 >
                     {machineList.map((machine, index) => (
                         <Tab key={machine} label={machine} value={index} />
@@ -514,6 +561,7 @@ const DashboardContent = () => {
                     title={`機台 ${machineList[selectedMachineTab]}`}
                     sx={{ padding: 2 }}
                     showMonthly={showMonthly}
+                    onColumnClick={handleMachineColumnClick}
                 />
             </StyledCard>
 
@@ -522,6 +570,13 @@ const DashboardContent = () => {
                 open={dialogOpen}
                 onClose={handleClose}
                 detailData={detailData}
+            />
+
+            {/* 盒鬚圖彈窗 */}
+            <BoxPlotDialog
+                open={state.boxPlotDialogOpen}
+                onClose={handleBoxPlotClose}
+                detailData={state.boxPlotDetailData}
             />
         </Box>
     )

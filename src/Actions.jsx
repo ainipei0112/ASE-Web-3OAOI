@@ -27,19 +27,20 @@ const Actions = () => {
         revalidate()
     }
 
-    const searchByCondition = async (drawingNo, machineId) => {
-        return await fetcher('http://10.11.33.122:1234/thirdAOI.php', { action: 'getDataByCondition', drawingNo, machineId })
+    const getDataByBDOrMachine = async (drawingNo, machineId) => {
+        return await fetcher('http://10.11.33.122:1234/thirdAOI.php', { action: 'getDataByBDOrMachine', drawingNo, machineId })
     }
 
-    const exportDataByCondition = async (drawingNo, machineId) => {
-        return await fetcher('http://10.11.33.122:1234/thirdAOI.php', { action: 'exportDataByCondition', drawingNo, machineId })
+    const exportDataByBDOrMachine = async (drawingNo, machineId) => {
+        return await fetcher('http://10.11.33.122:1234/thirdAOI.php', { action: 'exportDataByBDOrMachine', drawingNo, machineId })
     }
 
-    const getDetailsByDate = async (deviceId, date) => {
+    const getDetailsByDate = async (deviceId, date, period = 'daily') => {
         return await fetcher('http://10.11.33.122:1234/thirdAOI.php', {
             action: 'getDetailsByDate',
             deviceId,
-            date
+            date,
+            periodType: period
         })
     }
 
@@ -53,6 +54,15 @@ const Actions = () => {
         })
     }
 
+    const getMachineDetailsByBD = async (drawingNo, machineId, periodType) => {
+        return await fetcher('http://10.11.33.122:1234/thirdAOI.php', {
+            action: 'getMachineDetailsByBD',
+            drawingNo,
+            machineId,
+            periodType
+        })
+    }
+
     const sendEmail = async (emailData) => {
         return await fetcher('http://10.11.33.122:1234/thirdAOI.php', { action: 'mailAlert', emailData })
     }
@@ -60,10 +70,11 @@ const Actions = () => {
     return {
         aoiData,
         searchThirdAoiData,
-        searchByCondition,
-        exportDataByCondition,
+        getDataByBDOrMachine,
+        exportDataByBDOrMachine,
         getDetailsByDate,
         getBDDetailsByMachineStrip,
+        getMachineDetailsByBD,
         sendEmail,
     }
 }
