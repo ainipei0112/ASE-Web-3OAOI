@@ -32,6 +32,7 @@ import { calculateOperationData, calculateBdData, calculateMachineData, filterDa
 import Loader from '../global/Loader.jsx'
 import useChartOptions from './useChartOptions.jsx'
 import CardTitle from './CardTitle.jsx'
+import OverallDialog from './OverallDialog'
 import MachineStatusDialog from './MachineStatusDialog.jsx'
 import BoxPlotDialog from './BoxPlotDialog'
 
@@ -95,8 +96,10 @@ const initialState = {
     isLoading: true,
     chartsReady: false,
     showMonthly: false,
-    dialogOpen: false,
-    detailData: null,
+    overallDialogOpen: false,
+    overallDetailData: null,
+    bdDialogOpen: false,
+    bdDetailData: null,
     boxPlotDialogOpen: false,
     boxPlotDetailData: null
 }
@@ -117,10 +120,14 @@ const reducer = (state, action) => {
             return { ...state, chartsReady: action.payload }
         case 'SET_SHOW_MONTHLY':
             return { ...state, showMonthly: action.payload }
-        case 'SET_DIALOG_OPEN':
-            return { ...state, dialogOpen: action.payload }
-        case 'SET_DETAIL_DATA':
-            return { ...state, detailData: action.payload }
+        case 'SET_OVERALL_DIALOG_OPEN':
+            return { ...state, overallDialogOpen: action.payload }
+        case 'SET_OVERALL_DETAIL_DATA':
+            return { ...state, overallDetailData: action.payload }
+        case 'SET_BD_DIALOG_OPEN':
+            return { ...state, bdDialogOpen: action.payload }
+        case 'SET_BD_DETAIL_DATA':
+            return { ...state, bdDetailData: action.payload }
         case 'SET_BOXPLOT_DIALOG_OPEN':
             return { ...state, boxPlotDialogOpen: action.payload }
         case 'SET_BOXPLOT_DETAIL_DATA':
@@ -235,7 +242,11 @@ const ChartComponent = ({ data, title, sx, showMonthly = false, onColumnClick })
                         events: {
                             click: function (event) {
                                 if (event.point && event.point.category) {
-                                    onColumnClick(title, event.point.category, period.toLowerCase())
+                                    if (title === 'Overall') {
+                                        onColumnClick(event.point.category, period.toLowerCase())
+                                    } else {
+                                        onColumnClick(title, event.point.category, period.toLowerCase())
+                                    }
                                 }
                             }
                         }
@@ -318,7 +329,7 @@ const MachineChartComponent = ({ data, title, sx, showMonthly = false, onColumnC
 }
 
 const DashboardContent = () => {
-    const { aoiData, getDetailsByDate, getMachineDetailsByBD } = useContext(AppContext)
+    const { aoiData, getBDDetailsByOverall, getDetailsByDate, getMachineDetailsByBD } = useContext(AppContext)
     const [state, dispatch] = useReducer(reducer, initialState)
     const {
         bdData,
@@ -328,22 +339,44 @@ const DashboardContent = () => {
         isLoading,
         chartsReady,
         showMonthly,
-        dialogOpen,
-        detailData
+        overallDialogOpen,
+        overallDetailData,
+        bdDialogOpen,
+        bdDetailData,
+        boxPlotDialogOpen,
+        boxPlotDetailData,
     } = state
 
-    // BD柱狀圖點擊事件
+    // Overall 柱狀圖點擊事件
+    const handleOverallColumnClick = useCallback(async (date, period) => {
+        try {
+            const data = await getBDDetailsByOverall(date, period)
+            dispatch({
+                type: 'SET_OVERALL_DETAIL_DATA',
+                payload: {
+                    date,
+                    period,
+                    data
+                }
+            })
+            dispatch({ type: 'SET_OVERALL_DIALOG_OPEN', payload: true })
+        } catch (error) {
+            console.error('Error fetching Overall details:', error)
+        }
+    }, [getBDDetailsByOverall])
+
+    // B/D 柱狀圖點擊事件
     const handleBDColumnClick = useCallback(async (deviceId, date, period = 'daily') => {
         try {
             const data = await getDetailsByDate(deviceId, date, period)
-            dispatch({ type: 'SET_DETAIL_DATA', payload: { deviceId, date, period, data } })
-            dispatch({ type: 'SET_DIALOG_OPEN', payload: true })
+            dispatch({ type: 'SET_BD_DETAIL_DATA', payload: { deviceId, date, period, data } })
+            dispatch({ type: 'SET_BD_DIALOG_OPEN', payload: true })
         } catch (error) {
-            console.error('Error fetching details:', error)
+            console.error('Error fetching B/D details:', error)
         }
     }, [getDetailsByDate])
 
-    // M/C盒鬚圖點擊事件
+    // M/C 盒鬚圖點擊事件
     const handleMachineColumnClick = useCallback(async (drawingNo, machineId, period) => {
         try {
             const data = await getMachineDetailsByBD(drawingNo, machineId, period)
@@ -358,16 +391,21 @@ const DashboardContent = () => {
             })
             dispatch({ type: 'SET_BOXPLOT_DIALOG_OPEN', payload: true })
         } catch (error) {
-            console.error('Error fetching machine details:', error)
+            console.error('Error fetching M/C details:', error)
         }
     }, [getMachineDetailsByBD])
 
-    // 關閉彈窗
-    const handleClose = useCallback(() => {
-        dispatch({ type: 'SET_DIALOG_OPEN', payload: false })
+    // 關閉 Overall 彈窗
+    const handleOverallDialogClose = useCallback(() => {
+        dispatch({ type: 'SET_OVERALL_DIALOG_OPEN', payload: false })
     }, [])
 
-    // 關閉盒鬚圖彈窗
+    // 關閉 By B/D 彈窗
+    const handleClose = useCallback(() => {
+        dispatch({ type: 'SET_BD_DIALOG_OPEN', payload: false })
+    }, [])
+
+    // 關閉 By M/C 彈窗
     const handleBoxPlotClose = useCallback(() => {
         dispatch({ type: 'SET_BOXPLOT_DIALOG_OPEN', payload: false })
     }, [])
@@ -480,7 +518,7 @@ const DashboardContent = () => {
                     title={'Overall'}
                     sx={{ padding: 2 }}
                     showMonthly={showMonthly}
-                    onColumnClick={null}
+                    onColumnClick={handleOverallColumnClick}
                 />
             </StyledCard>
 
@@ -565,18 +603,25 @@ const DashboardContent = () => {
                 />
             </StyledCard>
 
-            {/* By機台作業狀況彈窗 */}
-            <MachineStatusDialog
-                open={dialogOpen}
-                onClose={handleClose}
-                detailData={detailData}
+            {/* Overall 柱狀圖彈窗 */}
+            <OverallDialog
+                open={overallDialogOpen}
+                onClose={handleOverallDialogClose}
+                detailData={overallDetailData}
             />
 
-            {/* 盒鬚圖彈窗 */}
+            {/* By機台作業狀況彈窗 */}
+            <MachineStatusDialog
+                open={bdDialogOpen}
+                onClose={handleClose}
+                detailData={bdDetailData}
+            />
+
+            {/* By M/C 盒鬚圖彈窗 */}
             <BoxPlotDialog
-                open={state.boxPlotDialogOpen}
+                open={boxPlotDialogOpen}
                 onClose={handleBoxPlotClose}
-                detailData={state.boxPlotDetailData}
+                detailData={boxPlotDetailData}
             />
         </Box>
     )

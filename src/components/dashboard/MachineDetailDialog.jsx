@@ -53,7 +53,6 @@ const TableHeaderRow = styled(TableRow)({
 })
 
 const MachineDetailDialog = ({ open, onClose, machineDetails, deviceId, machineId, date }) => {
-
     // 按 Overkill_Rate 排序
     const sortedDetails = [...machineDetails].sort((a, b) => b.Overkill_Rate - a.Overkill_Rate)
 

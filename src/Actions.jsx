@@ -35,6 +35,14 @@ const Actions = () => {
         return await fetcher('http://10.11.33.122:1234/thirdAOI.php', { action: 'exportDataByBDOrMachine', drawingNo, machineId })
     }
 
+    const getBDDetailsByOverall = async (date, period = 'daily') => {
+        return await fetcher('http://10.11.33.122:1234/thirdAOI.php', {
+            action: 'getBDDetailsByOverall',
+            date,
+            periodType: period
+        })
+    }
+
     const getDetailsByDate = async (deviceId, date, period = 'daily') => {
         return await fetcher('http://10.11.33.122:1234/thirdAOI.php', {
             action: 'getDetailsByDate',
@@ -72,6 +80,7 @@ const Actions = () => {
         searchThirdAoiData,
         getDataByBDOrMachine,
         exportDataByBDOrMachine,
+        getBDDetailsByOverall,
         getDetailsByDate,
         getBDDetailsByMachineStrip,
         getMachineDetailsByBD,
