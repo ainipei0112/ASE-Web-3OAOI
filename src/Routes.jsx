@@ -8,6 +8,7 @@ import MainLayout from './components/global/MainLayout' // 整個頁框
 import NotFound from './pages/NotFound'
 import QueryBoard from './pages/QueryBoard'
 import DashBoard from './pages/DashBoard'
+import MailBoard from './pages/MailBoard'
 
 // 儲存路由資訊
 const Routes = [
@@ -17,6 +18,7 @@ const Routes = [
         children: [
             { path: 'DashBoard', element: <DashBoard /> },
             { path: 'QueryBoard', element: <QueryBoard /> },
+            { path: 'MailBoard', element: <MailBoard /> },
             { path: '/', element: <Navigate to='/DashBoard' /> },
             { path: '404', element: <NotFound /> },
             { path: '*', element: <Navigate to='/404' /> },

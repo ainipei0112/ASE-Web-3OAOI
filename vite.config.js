@@ -11,4 +11,7 @@ export default defineConfig({
     server: {
         port: 3000, // port 指定為 3000
     },
+    build: {
+        outDir: '\\\\10.11.33.122\\d$\\khwbpeaiaoi_Shares$\\K18330\\Web\\WB-3OAOITEST',
+    },
 })
