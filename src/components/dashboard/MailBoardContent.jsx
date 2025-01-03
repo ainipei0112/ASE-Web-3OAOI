@@ -339,7 +339,12 @@ const DashboardContent = () => {
                     <Chip label="N" color="success" />
                 )}
             </Box>
-            <Box>
+            <Box
+                sx={{
+                    width: '1000px',
+                }}
+                id="mailcontent"
+            >
                 {/* Summary Card */}
                 <StyledCard>
                     <CardTitle title="Summary" />
@@ -361,6 +366,13 @@ const DashboardContent = () => {
                         onColumnClick={handleOverallColumnClick}
                     />
                 </StyledCard>
+            </Box>
+            <Box
+                sx={{
+                    width: '1000px',
+                }}
+                id="mailcontent2"
+            >
                 {/* B/D Card */}
                 <StyledCard>
                     <CardTitle title="By B/D" />

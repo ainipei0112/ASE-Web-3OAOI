@@ -13,5 +13,6 @@ export default defineConfig({
     },
     build: {
         outDir: '\\\\10.11.33.122\\d$\\khwbpeaiaoi_Shares$\\K18330\\Web\\WB-3OAOITEST',
+        emptyOutDir: true, // 打包時清空輸出目錄
     },
 })
