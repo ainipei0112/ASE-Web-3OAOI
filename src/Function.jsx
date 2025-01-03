@@ -234,7 +234,7 @@ function filterDataByDateRange(datas, days) {
     const now = new Date()
     now.setHours(0, 0, 0, 0) // 將時間設置為當天開始
     const pastDate = new Date(now)
-    pastDate.setDate(now.getDate() - days - 1)
+    pastDate.setDate(now.getDate() - days)
 
     return datas.filter(({ Ao_Time_Start }) => {
         const date = new Date(Ao_Time_Start)
