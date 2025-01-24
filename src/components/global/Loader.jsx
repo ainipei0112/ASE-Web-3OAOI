@@ -1,4 +1,5 @@
 import { Box } from '@mui/material'
+import { InfinitySpin } from 'react-loader-spinner'
 
 // 頁面載入動畫
 const Loader = () => {
@@ -12,7 +13,12 @@ const Loader = () => {
                 backgroundColor: '#f3f3f3'
             }}
         >
-            <img src="src\picture\gogogo.gif" alt="Loading..." />
+            <InfinitySpin
+                height="200"
+                width="200"
+                glassColor="#9AD09C"
+                color="#257209"
+            />
         </Box>
     )
 }

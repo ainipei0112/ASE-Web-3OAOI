@@ -28,6 +28,7 @@
 		"react-dom": "^18.3.1",
 		"react-feather": "^2.0.10",
 		"react-helmet": "^6.1.0",
+		"react-loader-spinner": "^6.1.6",
 		"react-router-dom": "^6.24.1",
 		"swr": "^2.2.5"
 	},
